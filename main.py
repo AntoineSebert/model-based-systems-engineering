@@ -4,6 +4,8 @@
 
 from argparse import ArgumentParser
 
+from builder import build
+
 
 def _create_cli_parser() -> ArgumentParser:
 	"""Creates a CLI argument parser and returns it.
@@ -50,7 +52,7 @@ def _create_cli_parser() -> ArgumentParser:
 def main() -> int:
 	args = _create_cli_parser().parse_args()
 
-	print("test")
+	network = build(args.file)
 
 	exit()
 
