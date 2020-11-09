@@ -1,12 +1,19 @@
 import io
-import xml.etree.ElementTree
+from networkx import DiGraph, draw
+from xml.etree import ElementTree
 
-from model import Network, Device, Switch, EndSystem, Link, Stream, Solution, Route
+#from model import Stream
 
-def build(file: io.TextIOWrapper) -> 'Network':
-	tree = ElementTree.parse(file)
-	root = tree.getroot()
+def build(file: io.TextIOWrapper) -> tuple[DiGraph, set['Stream']]:
+	root = ElementTree.parse(file).getroot()
 
-	print(root)
+	network = DiGraph()
+	for device in root.iter("device"):
+		network.add_node(device.get("name"), type=device.get("type"))
 
-	#return Network(config, arch, graph)
+	for link in root.iter("link"):
+		network.add_edge(link.get("src"), link.get("dest"), speed=link.get("speed"))
+
+	draw(network)
+
+	return (network, {Stream(stream) for stream in root.iter("stream")})

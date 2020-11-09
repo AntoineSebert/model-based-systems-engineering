@@ -14,13 +14,15 @@ class Device:
 
 
 class Stream:
-    def __init__(self, size, period, deadline, priority, src: Device, dest: Device):
+    def __init__(self, name, size, period, deadline, priority, src: Device, dest: Device):
+        self.name = name
         self.size = size
         self.period = period
         self.deadline = deadline
         self.priority = priority
         self.src = src
         self.dest = dest
+
 
 
 # Is a sequence of steps on the form {(ES2 --> SW0), (SW0 --> ES3)}
