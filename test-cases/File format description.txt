@@ -1,0 +1,44 @@
+INPUT:
+The input is given as an XML file (see the examples in this folder) in a human-readable format. You may use any libraries to parse these inputs into your program.
+
+The input starts with the devices forming the network. Each device has a name and is either a Switch(SW) or an EndSystem (ES). Only ES can send and/or receive streams.
+
+<device name="SW1" type="Switch"/>
+<device name="ES1" type="EndSystem"/>
+
+Links are directional. Each link has a source and destination device and a speed given in B/microsecond. (1.25 B/us = 10 Mbit/s)
+
+<link src="ES1" dest="SW0" speed="1.25"/>
+
+Finally, streams have an ID, a source and destination EndSystem, a size in Bytes, a period in microseconds (us), a deadline in us. Critical streams also have a redundancy level between 2 and 3.
+
+<stream id="Stream1" src="ES2" dest="ES4" size="100" period="1000" deadline="10000" rl="2"/>
+
+--------------
+OUTPUT:
+The output is also to be generated as an XML file with the extension ".solution".
+
+Please give the name of the solved test-case in the root tag.
+
+For each given stream in the input the output should contain a child element with the corresponding stream ID. Within these elements should be a child element for each route (1 for non-critical, 2-3 for critical, depending on rl). Each route node has a child element for each link along the route from sender to receiver.
+
+Example:
+<solution tc_name="TC0_example">
+	<stream id="Stream0">
+		<route>
+			<link src="ES1" dest="SW0" />
+			<link src="SW0" dest="ES3" />
+		</route>
+	</stream>
+	<stream id="Stream1">
+		<route>
+			<link src="ES2" dest="SW1" />
+			<link src="SW1" dest="ES4" />
+		</route>
+		<route>
+			<link src="ES2" dest="SW0" />
+			<link src="SW0" dest="ES4" />
+		</route>
+	</stream>
+</solution>
+
