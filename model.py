@@ -2,11 +2,6 @@ from typing import Tuple
 from typing import List
 
 
-class Network:
-    def __init__(self):
-        pass
-
-
 class Device:
     def __init__(self, name: str, device_type: str):
         self.name = name

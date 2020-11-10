@@ -4,13 +4,12 @@ from xml.dom import minidom
 import networkx as nx
 import matplotlib.pyplot as plt
 
-from model import Network, Device
+from model import Device
 
 def build(file: io.TextIOWrapper) -> 'Network':
 	tree = xml.etree.ElementTree.parse(file)
 	root = tree.getroot()
 	Network = nx.Graph()
-	# Network2 = nx.petersen_graph()
 
 	for child in root:
 		if child.tag == 'device':
