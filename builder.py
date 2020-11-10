@@ -1,19 +1,28 @@
 import io
-from networkx import DiGraph, draw
-from xml.etree import ElementTree
+import xml.etree.ElementTree
+from xml.dom import minidom
+import networkx as nx
+import matplotlib.pyplot as plt
 
-#from model import Stream
+from model import Network, Device
 
-def build(file: io.TextIOWrapper) -> tuple[DiGraph, set['Stream']]:
-	root = ElementTree.parse(file).getroot()
+def build(file: io.TextIOWrapper) -> 'Network':
+	tree = xml.etree.ElementTree.parse(file)
+	root = tree.getroot()
+	Network = nx.Graph()
+	# Network2 = nx.petersen_graph()
 
-	network = DiGraph()
-	for device in root.iter("device"):
-		network.add_node(device.get("name"), type=device.get("type"))
+	for child in root:
+		if child.tag == 'device':
+			node = Device(child.attrib['name'], child.attrib['type'])
+			Network.add_node(node)
+	for child in root:
+		if child.tag == 'link':
+			print("Adding edge from {0} to {1}".format(child.attrib['src'], child.attrib['dest']))
+			Network.add_edge(Device(child.attrib['src'], "Nan"), Device(child.attrib['dest'], "Nan"), weight=float(child.attrib['speed']))
 
-	for link in root.iter("link"):
-		network.add_edge(link.get("src"), link.get("dest"), speed=link.get("speed"))
+	plt.subplot(121)
+	nx.draw(Network)
+	plt.show()
+	print(minidom.parseString(xml.etree.ElementTree.tostring(root)).toprettyxml(indent="  "))
 
-	draw(network)
-
-	return (network, {Stream(stream) for stream in root.iter("stream")})

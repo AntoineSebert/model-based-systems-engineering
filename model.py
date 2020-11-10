@@ -12,6 +12,25 @@ class Device:
         self.name = name
         self.device_type = device_type
 
+    def __eq__(self, other):
+        # Only equal by name (ID)
+        if self.name == other.name:
+            return True
+        return False
+
+    def __hash__(self):
+        # print(hash(str(self)))
+        return hash(str(self.name))
+
+class streamInstance:
+    def __init__(self):
+        self.instance = 0
+
+    @staticmethod
+    def getInstance(self):
+        self.instance = self.instance + 1
+        return self.instance
+
 
 class Stream:
     def __init__(self, name, size, period, deadline, priority, src: Device, dest: Device):
