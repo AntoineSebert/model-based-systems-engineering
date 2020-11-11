@@ -38,7 +38,6 @@ class Stream:
         self.dest = dest
 
 
-
 # Is a sequence of steps on the form {(ES2 --> SW0), (SW0 --> ES3)}
 class Route:
     def __init__(self, stream: Stream, route: List[Tuple[str, str]]):

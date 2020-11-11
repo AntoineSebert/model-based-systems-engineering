@@ -2,6 +2,8 @@ from argparse import ArgumentParser
 
 from builder import build
 
+from logging import getLogger, WARNING, INFO
+
 
 def _create_cli_parser() -> ArgumentParser:
 	"""Creates a CLI argument parser and returns it.
@@ -14,7 +16,8 @@ def _create_cli_parser() -> ArgumentParser:
 
 	parser = ArgumentParser(
 		prog="Time-Sensitive Network Simulator",
-		description="Determine efficiency of network technologies used given certain system configurations in regards of safety and performance.",
+		description="Determine efficiency of network technologies used given certain system configurations in regards \
+			of safety and performance.",
 		allow_abbrev=True,
 	)
 
@@ -22,12 +25,12 @@ def _create_cli_parser() -> ArgumentParser:
 		'-s', '--scheduler',
 		default="strict-priority",
 		choices=["strict-priority"],
-		help="Scheduling algorithm, either one of: strict-priority",
+		help="Scheduling algorithm, either one of: 'strict-priority'",
 		metavar="SCHEDULER",
 		dest="scheduler",
 	)
 	parser.add_argument(
-		"--file",
+		"-f", "--file",
 		type=open,
 		required=True,
 		help="Import network description from FILE.",
@@ -48,7 +51,8 @@ def _create_cli_parser() -> ArgumentParser:
 def main() -> int:
 	args = _create_cli_parser().parse_args()
 
-	network = build(args.file)
+	getLogger().setLevel(INFO if args.verbose else WARNING)
+	network, streams = build(args.file)
 
 	exit()
 

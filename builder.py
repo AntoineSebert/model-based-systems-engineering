@@ -1,27 +1,44 @@
-import io
-import xml.etree.ElementTree
-from xml.dom import minidom
-import networkx as nx
-import matplotlib.pyplot as plt
+from io import TextIOWrapper
+from logging import getLogger
+from xml.etree.ElementTree import dump, indent, parse
 
-from model import Device
 
-def build(file: io.TextIOWrapper) -> 'Network':
-	tree = xml.etree.ElementTree.parse(file)
-	root = tree.getroot()
-	Network = nx.Graph()
+from matplotlib import pyplot  # type: ignore
 
-	for child in root:
-		if child.tag == 'device':
-			node = Device(child.attrib['name'], child.attrib['type'])
-			Network.add_node(node)
-	for child in root:
-		if child.tag == 'link':
-			print("Adding edge from {0} to {1}".format(child.attrib['src'], child.attrib['dest']))
-			Network.add_edge(Device(child.attrib['src'], "Nan"), Device(child.attrib['dest'], "Nan"), weight=float(child.attrib['speed']))
+from model import Stream
 
-	plt.subplot(121)
-	nx.draw(Network)
-	plt.show()
-	print(minidom.parseString(xml.etree.ElementTree.tostring(root)).toprettyxml(indent="  "))
+from networkx import DiGraph, draw  # type: ignore
 
+
+def build(file: TextIOWrapper) -> tuple[DiGraph, set[Stream]]:
+	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
+
+	Parameters
+	----------
+	file : TextIOWrapper
+		A *.app_network_description file from which import the network and streams.
+
+	Returns
+	-------
+	tuple[DiGraph, set[Stream]]
+		A tuple containing the network as a digraph and a set of streams.
+	"""
+
+	root = parse(file).getroot()
+
+	indent(root, space="\t")
+	dump(root)
+
+	network = DiGraph()
+
+	for device in root.iter("device"):
+		network.add_node(device.get("name"), type=device.get("type"))
+
+	for link in root.iter("link"):
+		network.add_edge(link.get("src"), link.get("dest"), speed=link.get("speed"))
+
+	pyplot.subplot(121)
+	draw(network)
+	pyplot.show()
+
+	return (network, {Stream(stream.attrib) for stream in root.iter("stream")})
