@@ -1,8 +1,7 @@
 from argparse import ArgumentParser
+from logging import INFO, WARNING, getLogger
 
 from builder import build
-
-from logging import getLogger, WARNING, INFO
 
 
 def _create_cli_parser() -> ArgumentParser:
