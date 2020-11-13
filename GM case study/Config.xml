@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration>
+  <Cpu Id="0" Name = "ES_CTRL1">
+    <Core Id="0" MacroTick ="200"/>
+    <Core Id="1" MacroTick ="200"/>
+  </Cpu>
+  <Cpu Id="1" Name = "ES_CTRL2">
+    <Core Id="0" MacroTick ="200"/>
+    <Core Id="1" MacroTick ="200"/>
+  </Cpu>
+</Configuration>
