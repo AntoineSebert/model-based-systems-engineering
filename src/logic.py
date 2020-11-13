@@ -33,7 +33,7 @@ class Framelet:
 		if isinstance(other, Framelet):
 			return NotImplemented
 		elif self.instance is not other.instance:
-			return False
+			return RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
 
 		return self.id.__eq__(other.id)
 
@@ -41,7 +41,7 @@ class Framelet:
 		if isinstance(other, Framelet):
 			return NotImplemented
 		elif self.instance is not other.instance:
-			return False
+			return RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
 
 		return self.id.__lt__(other.id)
 
@@ -86,7 +86,7 @@ class StreamInstance(Sequence):
 		if isinstance(other, StreamInstance):
 			return NotImplemented
 		elif self.stream is not other.stream:
-			return False
+			return RuntimeError(f"Stream mismatch between {self=} and {other=}")
 
 		return self.local_deadline.__eq__(other.local_deadline)
 
@@ -94,7 +94,7 @@ class StreamInstance(Sequence):
 		if isinstance(other, StreamInstance):
 			return NotImplemented
 		elif self.stream is not other.stream:
-			return False
+			return RuntimeError(f"Stream mismatch between {self=} and {other=}")
 
 		return self.local_deadline.__lt__(other.local_deadline)
 
