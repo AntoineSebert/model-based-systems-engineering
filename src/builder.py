@@ -1,11 +1,9 @@
 from io import TextIOWrapper
 from logging import getLogger
 from xml.etree.ElementTree import dump, indent, parse
-
-
 from matplotlib import pyplot  # type: ignore
 
-from model import Stream
+from model import Stream, EndSystem, Switch
 
 from networkx import DiGraph, draw  # type: ignore
 

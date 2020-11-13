@@ -1,21 +1,33 @@
 from typing import Tuple
 from typing import List
 from xml.etree import ElementTree
+from dataclasses import dataclass
 
+@dataclass
 class Device:
-    def __init__(self, name: str, device_type: str):
-        self.name = name
-        self.device_type = device_type
+    name: str
 
-    def __eq__(self, other):
-        # Only equal by name (ID)
-        if self.name == other.name:
-            return True
-        return False
 
-    def __hash__(self):
-        # print(hash(str(self)))
-        return hash(str(self.name))
+@dataclass(eq=False)
+class Switch(Device):
+    speed: float = 1.0
+
+
+@dataclass(eq=False)
+class EndSystem(Device):
+    pass
+
+
+    # def __eq__(self, other):
+    #     # Only equal by name (ID)
+    #     if self.name == other.name:
+    #         return True
+    #     return False
+    #
+    # def __hash__(self):
+    #     # print(hash(str(self)))
+    #     return hash(str(self.name))
+
 
 class streamInstance:
     def __init__(self):
