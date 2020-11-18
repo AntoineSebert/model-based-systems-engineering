@@ -51,8 +51,7 @@ def main() -> int:
 	args = _create_cli_parser().parse_args()
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
-	build(args.file)
-	# network, streams = build(args.file)
+	network, streams = build(args.file)
 
 	exit()
 
