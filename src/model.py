@@ -3,6 +3,7 @@ from typing import List
 from xml.etree import ElementTree
 from dataclasses import dataclass
 
+
 @dataclass
 class Device:
     name: str

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from functools import total_order
 
 from model import EndSystem
@@ -73,8 +73,8 @@ class StreamInstance(Sequence):
 
 	stream: Stream
 	dest = EndSystem
-	framelets: list[Framelet] = []
 	local_deadline: int
+	framelets: list[Framelet] = field(default_factory=[])
 
 	def __getitem__(self: StreamInstance, key: int) -> Framelet:
 		return self.framelets.__getitem__(key)
@@ -133,11 +133,11 @@ class Stream(Sequence):
 	"""
 
 	src: EndSystem
-	dest: dict[EndSystem, int] = {}
 	size: int
 	period: int
 	deadline: int
-	instances: list[StreamInstance] = []
+	dest: dict[EndSystem, int] = field(default_factory={})
+	instances: list[StreamInstance] = field(default_factory=[])
 
 	def __getitem__(self: Stream, key: int) -> StreamInstance:
 		return self.instances.__getitem__(key)
