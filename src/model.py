@@ -3,10 +3,21 @@ from typing import List
 from xml.etree import ElementTree
 from dataclasses import dataclass
 
-
 @dataclass
 class Device:
+    #def __init__(self, name):
+        #self.name = name
     name: str
+
+    def __hash__(self):
+        return hash(self.name)
+
+    def __eq__(self, other):
+        if isinstance(other, Device):
+            return self.name == other.name
+        #elif isinstance(other, str):
+         #   return self.name == other
+        return False
 
 
 @dataclass(eq=False)
@@ -17,7 +28,6 @@ class Switch(Device):
 @dataclass(eq=False)
 class EndSystem(Device):
     pass
-
 
     # def __eq__(self, other):
     #     # Only equal by name (ID)
