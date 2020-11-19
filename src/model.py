@@ -5,8 +5,6 @@ from dataclasses import dataclass
 
 @dataclass
 class Device:
-    #def __init__(self, name):
-        #self.name = name
     name: str
 
     def __hash__(self):
@@ -15,8 +13,6 @@ class Device:
     def __eq__(self, other):
         if isinstance(other, Device):
             return self.name == other.name
-        #elif isinstance(other, str):
-         #   return self.name == other
         return False
 
 
