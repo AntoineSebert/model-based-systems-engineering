@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from collections.abc import Sequence
 from dataclasses import dataclass, field
-from functools import total_order
+from functools import total_ordering
 
 from model import EndSystem
 
 
 @dataclass
-@total_order
+@total_ordering
 class Framelet:
 	"""
 	A class used to represent a Framelet
@@ -47,7 +47,7 @@ class Framelet:
 
 
 @dataclass
-@total_order
+@total_ordering
 class StreamInstance(Sequence):
 	"""
 	A class used to represent an instance of a Stream
@@ -111,7 +111,7 @@ class StreamInstance(Sequence):
 
 
 @dataclass
-@total_order
+@total_ordering
 class Stream(Sequence):
 	"""
 	A class used to represent a Stream, with an EDF ordering

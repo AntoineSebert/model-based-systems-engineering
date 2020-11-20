@@ -3,7 +3,9 @@ from logging import getLogger
 from xml.etree.ElementTree import dump, indent, parse
 from matplotlib import pyplot  # type: ignore
 
-from model import Stream, EndSystem, Switch, Device
+from model import EndSystem, Switch, Device
+
+from logic import Stream
 
 from networkx import DiGraph, draw, spring_layout  # type: ignore
 from numpy import sqrt
