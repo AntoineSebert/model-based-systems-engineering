@@ -46,8 +46,8 @@ class Framelet:
 		return self.id.__lt__(other.id)
 
 
-@total_order
 @dataclass
+@total_order
 class StreamInstance(Sequence):
 	"""
 	A class used to represent an instance of a Stream
@@ -110,8 +110,8 @@ class StreamInstance(Sequence):
 		return sum(framelet.size for framelet in self.framelets) == self.stream.size()
 
 
-@total_order
 @dataclass
+@total_order
 class Stream(Sequence):
 	"""
 	A class used to represent a Stream, with an EDF ordering

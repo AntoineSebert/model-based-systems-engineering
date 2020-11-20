@@ -3,6 +3,8 @@ from logging import INFO, WARNING, getLogger
 
 from builder import build
 
+from output import to_file
+
 
 def _create_cli_parser() -> ArgumentParser:
 	"""Creates a CLI argument parser and returns it.
@@ -51,8 +53,12 @@ def main() -> int:
 	args = _create_cli_parser().parse_args()
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
-	build(args.file)
-	# network, streams = build(args.file)
+
+	network, streams = build(args.file)
+
+	solution = simulate(network, streams)
+
+	to_file(solution, args.folder)
 
 	exit()
 
