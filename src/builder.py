@@ -1,29 +1,34 @@
-from io import TextIOWrapper
 from logging import getLogger
+from pathlib import Path
 from xml.etree.ElementTree import dump, indent, parse
-from matplotlib import pyplot  # type: ignore
-
-from model import EndSystem, Switch, Device
 
 from logic import Stream
 
+from matplotlib import pyplot  # type: ignore
+
+from model import EndSystem, Switch
+
 from networkx import DiGraph, draw, spring_layout  # type: ignore
+
 from numpy import sqrt
 
 
-def build(file: TextIOWrapper) -> tuple[DiGraph, set[Stream]]:
+def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Parameters
 	----------
-	file : TextIOWrapper
-		A *.app_network_description file from which import the network and streams.
+	file : Path
+		An *.xml file from which import the network and streams.
 
 	Returns
 	-------
 	tuple[DiGraph, set[Stream]]
 		A tuple containing the network as a digraph and a set of streams.
 	"""
+	logger = getLogger()
+
+	logger.info(f"Importing the model from '{file}'...")
 
 	root = parse(file).getroot()
 
@@ -34,12 +39,10 @@ def build(file: TextIOWrapper) -> tuple[DiGraph, set[Stream]]:
 
 	# Find devices
 	for device in root.iter("device"):
-		device_type = device.get("type")
-		device_name = device.get("name")
-		if device_type == "EndSystem":
-			network.add_node(EndSystem(device_name))
+		if (device_type := device.get("type")) == "EndSystem":
+			network.add_node(EndSystem(device.get("name")))
 		elif device_type == "Switch":
-			network.add_node(Switch(device_name))
+			network.add_node(Switch(device.get("name")))
 
 	# Connect devices by links
 
@@ -72,4 +75,17 @@ def build(file: TextIOWrapper) -> tuple[DiGraph, set[Stream]]:
 	draw(network, pos=pos)
 	pyplot.show()
 
-	return network, {Stream.from_element(stream) for stream in root.iter("stream")}
+	streams = {Stream(
+		stream.get("id"),
+		stream.get("src"),
+		stream.get("dest"),
+		stream.get("size"),
+		stream.get("period"),
+		stream.get("deadline"),
+		stream.get("rl"),
+		set(),
+	) for stream in root.iter("stream")}
+
+	logger.info("done.")
+
+	return network, streams

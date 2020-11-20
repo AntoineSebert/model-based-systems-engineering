@@ -1,9 +1,12 @@
 from argparse import ArgumentParser
 from logging import INFO, WARNING, getLogger
+from pathlib import Path
 
 from builder import build
 
 from output import to_file
+
+from simulator import simulate
 
 
 def _create_cli_parser() -> ArgumentParser:
@@ -32,7 +35,7 @@ def _create_cli_parser() -> ArgumentParser:
 	)
 	parser.add_argument(
 		"-f", "--file",
-		type=open,
+		type=Path,
 		required=True,
 		help="Import network description from FILE.",
 		metavar='FILE',
@@ -58,7 +61,7 @@ def main() -> int:
 
 	solution = simulate(network, streams)
 
-	to_file(solution, args.folder)
+	to_file(solution, args.file)
 
 	exit()
 

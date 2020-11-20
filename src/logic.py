@@ -3,8 +3,23 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
+from typing import Union
 
 from model import EndSystem
+
+from networkx import DiGraph  # type: ignore
+
+
+@dataclass
+class Route:
+	subgraph: DiGraph
+
+	def check(self: Route) -> None:
+		# check if subgraph only is a sequence of nodes, with EndSystem as src and dest
+		pass
+
+	def transmission_time(self: Route, size: int) -> int:
+		return sum(-(-size // speed) for u, v, speed in self.subgraph.edges(data="speed"))
 
 
 @dataclass
@@ -31,19 +46,21 @@ class Framelet:
 
 	def __eq__(self: Framelet, other: object) -> bool:
 		if isinstance(other, Framelet):
-			return NotImplemented
-		elif self.instance is not other.instance:
-			return RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
+			if self.instance is not other.instance:
+				RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
 
-		return self.id.__eq__(other.id)
+			return self.id.__eq__(other.id)
+		else:
+			return NotImplemented
 
 	def __lt__(self: Framelet, other: object) -> bool:
 		if isinstance(other, Framelet):
-			return NotImplemented
-		elif self.instance is not other.instance:
-			return RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
+			if self.instance is not other.instance:
+				RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
 
-		return self.id.__lt__(other.id)
+			return self.id.__lt__(other.id)
+		else:
+			return NotImplemented
 
 
 @dataclass
@@ -72,11 +89,11 @@ class StreamInstance(Sequence):
 	"""
 
 	stream: Stream
-	dest = EndSystem
+	dest: EndSystem
 	local_deadline: int
-	framelets: list[Framelet] = field(default_factory=[])
+	framelets: list[Framelet] = field(default_factory=list)
 
-	def __getitem__(self: StreamInstance, key: int) -> Framelet:
+	def __getitem__(self: StreamInstance, key: Union[int, slice]) -> Union[Framelet, list[Framelet]]:
 		return self.framelets.__getitem__(key)
 
 	def __len__(self: StreamInstance) -> int:
@@ -84,30 +101,32 @@ class StreamInstance(Sequence):
 
 	def __eq__(self: StreamInstance, other: object) -> bool:
 		if isinstance(other, StreamInstance):
-			return NotImplemented
-		elif self.stream is not other.stream:
-			return RuntimeError(f"Stream mismatch between {self=} and {other=}")
+			if self.stream is not other.stream:
+				RuntimeError(f"Stream mismatch between {self=} and {other=}")
 
-		return self.local_deadline.__eq__(other.local_deadline)
+			return self.local_deadline.__eq__(other.local_deadline)
+		else:
+			return NotImplemented
 
 	def __lt__(self: StreamInstance, other: object) -> bool:
 		if isinstance(other, StreamInstance):
+			if self.stream is not other.stream:
+				RuntimeError(f"Stream mismatch between {self=} and {other=}")
+
+			return self.local_deadline.__lt__(other.local_deadline)
+		else:
 			return NotImplemented
-		elif self.stream is not other.stream:
-			return RuntimeError(f"Stream mismatch between {self=} and {other=}")
 
-		return self.local_deadline.__lt__(other.local_deadline)
-
-	def check_framelets(self: StreamInstance) -> bool:
+	def check_framelets(self: StreamInstance) -> int:
 		"""Checks that the sum of the sizes of all framelets is equal to the size of the stream.
 
 		Returns
 		-------
-		bool
-			True if the size invariant holds, and False otherwise
+		int
+			The subtraction between the length of the sream and the total size of all framelets
 		"""
 
-		return sum(framelet.size for framelet in self.framelets) == self.stream.size()
+		return len(self.stream) - sum(framelet.size for framelet in self.framelets)
 
 
 @dataclass
@@ -120,6 +139,8 @@ class Stream(Sequence):
 
 	Attributes
 	----------
+	id : str
+		the name of the stream
 	src : EndSystem
 		a source device
 	dest : dict[EndSystem, int]
@@ -130,16 +151,25 @@ class Stream(Sequence):
 		the period of the Stream
 	deadline : int
 		the deadline of the Stream
+	rl : int
+		a redundancy level
+	instances : list[StreamInstance]
+		a list of instances
 	"""
 
+	id: str
 	src: EndSystem
+	dest: EndSystem
 	size: int
 	period: int
 	deadline: int
-	dest: dict[EndSystem, int] = field(default_factory={})
-	instances: list[StreamInstance] = field(default_factory=[])
+	rl: int
+	instances: list[StreamInstance] = field(default_factory=list)
 
-	def __getitem__(self: Stream, key: int) -> StreamInstance:
+	def __hash__(self: Stream) -> int:
+		return hash(self.id)
+
+	def __getitem__(self: Stream, key: Union[int, slice]) -> Union[StreamInstance, list[StreamInstance]]:
 		return self.instances.__getitem__(key)
 
 	def __len__(self: Stream) -> int:
@@ -147,12 +177,34 @@ class Stream(Sequence):
 
 	def __eq__(self: Stream, other: object) -> bool:
 		if isinstance(other, Stream):
-			return NotImplemented
+			return self.deadline.__eq__(other.deadline)
 
-		return self.deadline.__eq__(other.deadline)
+		return NotImplemented
 
 	def __lt__(self: Stream, other: object) -> bool:
 		if isinstance(other, Stream):
-			return NotImplemented
+			return self.deadline.__lt__(other.deadline)
 
-		return self.deadline.__lt__(other.deadline)
+		return NotImplemented
+
+
+@dataclass
+class Solution:
+	"""
+	A class used to represent a Solution
+
+	...
+
+	Attributes
+	----------
+	network : DiGraph
+		a
+	streams : set[Stream]
+		a set of streams
+	routes : dict[Stream, set[Route]]
+		a dictionary of streams as keys and set of routes as values
+	"""
+
+	network: DiGraph
+	streams: set[Stream] = field(default_factory=set)
+	routes: dict[Stream, set[Route]] = field(default_factory=dict)

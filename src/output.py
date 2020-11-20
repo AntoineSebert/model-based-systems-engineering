@@ -1,52 +1,60 @@
-
+from datetime import datetime
 from logging import getLogger
 from pathlib import Path
-from xml.etree.ElementTree import indent
+from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
+
+from logic import Solution
 
 
-from model import Solution, Switch, EndSystem
+def _add_streams(network_desc: Element, solution: Solution) -> None:
+	for stream in solution.streams:
+		stream_element = SubElement(network_desc, "stream", {
+			"id": stream.id,
+			"src": stream.src,
+			"dest": stream.dest,
+			"size": str(stream.size),
+			"period": str(stream.period),
+			"deadline": str(stream.deadline),
+			"rl": str(stream.rl),
+		})
+
+		for instance in stream.instances:
+			instance_element = SubElement(stream_element, "instance", {"local_deadline": instance.local_deadline})
+
+			for framelet in instance.framelets:
+				SubElement(instance_element, "framelet", {"id": framelet.id, "size": framelet.size})
 
 
-def to_file(solution: Solution, folder: Path) -> Path:
+def _create_filepath(file: Path) -> Path:
+	suffix = datetime.now().strftime(".%Y-%m-%d-%H-%M-%S") + ".xml"
+	new_file = file if len(file.suffixes) < 2 else file.parent / str(file.stem).split('.')[0]
+
+	return new_file.with_suffix(suffix)
+
+
+def to_file(solution: Solution, file: Path) -> Path:
 	logger = getLogger()
 
-	filepath: Path = args.folder / (args.folder.stem + ".xml")
-	logger.info(f"Writing the best solution into '{filepath}'...")
+	filepath = _create_filepath(file)
 
-	filepath.touch(exist_ok=False)
+	logger.info(f"Writing the best solution into '{filepath.name}'...")
 
-	root = ElementTree(Element("simulation"))
-
-	network = SubElement(root, "Network")
-	network_desc = SubElement(root, "networkDescription")
-	config = SubElement(root, "Configuration")
-	tasks = SubElement(root, "graphml")
+	network_desc = Element("NetworkDescription")
 
 	for node in solution.network:
 		SubElement(network_desc, "device", {"name": node.name, "type": node.__class__.__name__})
 
 	for u, v, speed in solution.network.edges(data="speed"):
-		SubElement(network_desc, "link", {"src": u.name, "src": u.name, "speed": speed})
+		SubElement(network_desc, "link", {"src": u.name, "dest": v.name, "speed": speed})
 
-	for stream in solution.streams:
-		for dest, rl in stream.dest.items():
-			SubElement(network_desc, "stream", {
-				"id": stream.name,
-				"src": stream.src,
-				"dest": stream.dest,
-				"size": stream.size,
-				"period": stream.period,
-				"deadline": stream.deadline,
-				"rl": stream.rl,
-			})
+	_add_streams(network_desc, solution)
 
+	root = ElementTree(network_desc)
 	indent(root, space="\t")
-
-	with filepath.open(mode='w', encoding='utf-8') as file:
-		root.write(file, encoding='utf-8')
+	root.write(filepath, encoding='utf-8', xml_declaration=True)
 
 	# add metadata (cost function + worst case transmission time)
 
-	logger.log("done.")
+	logger.info("done.")
 
 	return filepath
