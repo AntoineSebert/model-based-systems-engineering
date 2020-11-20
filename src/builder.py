@@ -70,4 +70,4 @@ def build(file: TextIOWrapper) -> tuple[DiGraph, set[Stream]]:
 	draw(network, pos=pos)
 	pyplot.show()
 
-	return (network, {Stream.from_element(stream) for stream in root.iter("stream")})
+	return network, {Stream.from_element(stream) for stream in root.iter("stream")}
