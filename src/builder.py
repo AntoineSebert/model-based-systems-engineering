@@ -77,8 +77,8 @@ def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 
 	streams = {Stream(
 		stream.get("id"),
-		stream.get("src"),
-		stream.get("dest"),
+		[node for node, data in network.nodes(data=True) if node.name == stream.get("src")][0],
+		[node for node, data in network.nodes(data=True) if node.name == stream.get("dest")][0],
 		stream.get("size"),
 		stream.get("period"),
 		stream.get("deadline"),
