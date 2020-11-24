@@ -28,6 +28,7 @@ class Switch(Device):
 
 	def receive(self: Switch, time: int) -> set['Stream']:
 		misses: set['Stream'] = set()
+		temp: PriorityQueue = PriorityQueue()
 
 		while not self.queue.empty():
 			priority, framelet = self.queue.get()
@@ -36,7 +37,9 @@ class Switch(Device):
 			if time < framelet.instance.local_deadline:
 				misses.add(framelet.instance.stream)
 
-			self.queue.put((priority, framelet))
+			self.temp.put((priority, framelet))
+
+		self.queue = temp
 
 		return misses
 
