@@ -10,7 +10,7 @@ from model import EndSystem, Switch
 
 from networkx import DiGraph, draw, spring_layout  # type: ignore
 
-from numpy import sqrt
+from numpy import sqrt  # type: ignore
 
 
 def build(file: Path) -> tuple[DiGraph, set[Stream]]:
@@ -77,8 +77,8 @@ def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 
 	streams = {Stream(
 		stream.get("id"),
-		stream.get("src"),
-		stream.get("dest"),
+		[node for node in network.nodes if node.name == stream.get("src")][0],
+		[node for node in network.nodes if node.name == stream.get("dest")][0],
 		stream.get("size"),
 		stream.get("period"),
 		stream.get("deadline"),

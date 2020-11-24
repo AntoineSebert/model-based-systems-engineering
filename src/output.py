@@ -9,9 +9,9 @@ from logic import Solution
 def _add_streams(network_desc: Element, solution: Solution) -> None:
 	for stream in solution.streams:
 		stream_element = SubElement(network_desc, "stream", {
-			"id": stream.id,
-			"src": stream.src,
-			"dest": stream.dest,
+			"id": str(stream.id),
+			"src": stream.src.name,
+			"dest": stream.dest.name,
 			"size": str(stream.size),
 			"period": str(stream.period),
 			"deadline": str(stream.deadline),
@@ -19,10 +19,10 @@ def _add_streams(network_desc: Element, solution: Solution) -> None:
 		})
 
 		for instance in stream.instances:
-			instance_element = SubElement(stream_element, "instance", {"local_deadline": instance.local_deadline})
+			instance_element = SubElement(stream_element, "instance", {"local_deadline": str(instance.local_deadline)})
 
 			for framelet in instance.framelets:
-				SubElement(instance_element, "framelet", {"id": framelet.id, "size": framelet.size})
+				SubElement(instance_element, "framelet", {"id": str(framelet.id), "size": str(framelet.size)})
 
 
 def _create_filepath(file: Path) -> Path:
