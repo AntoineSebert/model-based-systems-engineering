@@ -1,7 +1,5 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from queue import PriorityQueue
-
-from logic import Framelet
 
 
 @dataclass
@@ -26,4 +24,4 @@ class Switch(Device):
 @dataclass(eq=False)
 class EndSystem(Device):
 	remainder: int = 0
-	ingress: list[Framelet] = []
+	ingress: list['Framelet'] = field(default_factory=list)
