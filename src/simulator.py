@@ -7,20 +7,20 @@ from model import Switch
 from networkx import DiGraph  # type: ignore
 
 
-def _events(time: int, network: DiGraph, streams: set[Stream]) -> list[Stream]:
-	misses = []
+def _events(time: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
+	misses = {}
 
 	for stream in streams:
 		stream.src.emit(time)
 
 	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
-		misses += switch.receive(time)
+		misses |= switch.receive(time)
 
 	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
 		switch.emit(time)
 
 	for stream in streams:
-		misses += stream.src.receive(time)
+		misses |= stream.src.receive(time)
 
 	return misses
 
@@ -30,10 +30,11 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	logger = logging.getLogger()
 
 	time: int = 0
-	loop_cond = (lambda tl, t: tl < t) if 0 < time_limit else (lambda tl, t: True)
+	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: list[Stream] = []
 
-	while loop_cond(time_limit, time):
+	while loop_cond(time, time_limit):
+		print(time)
 		misses = _events(time, network, streams)
 
 		for stream in misses.items():

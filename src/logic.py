@@ -38,6 +38,11 @@ class Framelet:
 		the stream instance the Framelet belongs to
 	size : int
 		the size of the Framelet
+
+	Methods
+	-------
+	to_string()
+		Returns a short string description of the Framelet
 	"""
 
 	id: int
@@ -61,6 +66,22 @@ class Framelet:
 			return self.id.__lt__(other.id)
 		else:
 			return NotImplemented
+
+	def to_string(self: Framelet) -> str:
+		"""Returns a short string description of the Framelet.
+
+		Parameters
+		----------
+		self : Framelet
+			The calling instance.
+
+		Returns
+		-------
+		str
+			A short description of the Framelet
+		"""
+
+		return f"{self.instance.stream.name}/{self.instance.id}/{self.id}:{self.size}"
 
 
 @dataclass
