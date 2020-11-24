@@ -26,6 +26,7 @@ def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	tuple[DiGraph, set[Stream]]
 		A tuple containing the network as a digraph and a set of streams.
 	"""
+
 	logger = getLogger()
 
 	logger.info(f"Importing the model from '{file}'...")

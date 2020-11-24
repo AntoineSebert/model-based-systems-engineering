@@ -8,7 +8,7 @@ from networkx import DiGraph  # type: ignore
 
 
 def _events(time: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
-	misses = {}
+	misses = set()
 
 	for stream in streams:
 		stream.src.emit(time)
@@ -22,6 +22,9 @@ def _events(time: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
 	for stream in streams:
 		misses |= stream.src.receive(time)
 
+	for stream in misses:
+		logger.warning(f"Missed deadline for {stream.id} at {time}")
+
 	return misses
 
 
@@ -31,14 +34,11 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
 	time: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
-	misses: list[Stream] = []
+	misses: set[Stream] = set()
 
 	while loop_cond(time, time_limit):
 		print(time)
 		misses = _events(time, network, streams)
-
-		for stream in misses.items():
-			logger.warning(f"Missed deadline for {stream=} at {time}")
 
 		if len(misses) != 0 and stop_on_miss:
 			break
