@@ -18,8 +18,9 @@ class Device:
 @dataclass(eq=False)
 class Switch(Device):
 	speed: float = 1.0
+	queue: PriorityQueue
 
 
 @dataclass(eq=False)
 class EndSystem(Device):
-	pass
+	remainder: int
