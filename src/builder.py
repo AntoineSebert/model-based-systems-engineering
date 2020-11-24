@@ -10,7 +10,7 @@ from model import EndSystem, Switch
 
 from networkx import DiGraph, draw, spring_layout  # type: ignore
 
-from numpy import sqrt
+from numpy import sqrt  # type: ignore
 
 
 def build(file: Path) -> tuple[DiGraph, set[Stream]]:
