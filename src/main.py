@@ -26,20 +26,27 @@ def _create_cli_parser() -> ArgumentParser:
 	)
 
 	parser.add_argument(
-		'-s', '--scheduler',
-		default="strict-priority",
-		choices=["strict-priority"],
-		help="Scheduling algorithm, either one of: 'strict-priority'",
-		metavar="SCHEDULER",
-		dest="scheduler",
-	)
-	parser.add_argument(
 		"-f", "--file",
 		type=Path,
 		required=True,
 		help="Import network description from FILE.",
 		metavar='FILE',
 		dest="file",
+	)
+	parser.add_argument(
+		"-t", "--time-limit",
+		type=int,
+		default=-1,
+		help="A time limitation for the simulation, in simulation time (or, the iteration limit).",
+		metavar='TIME',
+		dest="time",
+	)
+	parser.add_argument(
+		"-s", "--stop-on-miss",
+		action='store_true',
+		help="Toggles whether the simulation stops when a deadline miss happens or not.",
+		#metavar='STOP',
+		dest="stop",
 	)
 	parser.add_argument(
 		"--verbose",
@@ -59,7 +66,7 @@ def main() -> int:
 
 	network, streams = build(args.file)
 
-	solution = simulate(network, streams)
+	solution = simulate(network, streams, args.time, args.stop)
 
 	to_file(solution, args.file)
 
