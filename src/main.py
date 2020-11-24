@@ -45,7 +45,6 @@ def _create_cli_parser() -> ArgumentParser:
 		"-s", "--stop-on-miss",
 		action='store_true',
 		help="Toggles whether the simulation stops when a deadline miss happens or not.",
-		#metavar='STOP',
 		dest="stop",
 	)
 	parser.add_argument(
