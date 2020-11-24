@@ -1,6 +1,8 @@
 from dataclasses import dataclass
 from queue import PriorityQueue
 
+from logic import Framelet
+
 
 @dataclass
 class Device:
@@ -17,10 +19,11 @@ class Device:
 
 @dataclass(eq=False)
 class Switch(Device):
+	queue: PriorityQueue = PriorityQueue()
 	speed: float = 1.0
-	queue: PriorityQueue
 
 
 @dataclass(eq=False)
 class EndSystem(Device):
-	remainder: int
+	remainder: int = 0
+	ingress: list[Framelet] = []
