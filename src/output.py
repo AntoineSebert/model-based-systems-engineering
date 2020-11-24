@@ -7,6 +7,16 @@ from logic import Solution
 
 
 def _add_streams(network_desc: Element, solution: Solution) -> None:
+	"""Add the streams and their descendants into an XML element.
+
+	Parameters
+	----------
+	network_desc : Element
+		An XML element to hold the stream-related data.
+	solution : Solution
+		A solution from which import the stream-related data.
+	"""
+
 	for stream in solution.streams:
 		stream_element = SubElement(network_desc, "stream", {
 			"id": str(stream.id),
@@ -26,6 +36,19 @@ def _add_streams(network_desc: Element, solution: Solution) -> None:
 
 
 def _create_filepath(file: Path) -> Path:
+	"""Creates a filepath from another file path.
+
+	Parameters
+	----------
+	file : Path
+		An *.xml file from which import the network and streams.
+
+	Returns
+	-------
+	Path
+		An *.xml filepath of the form 'name.datetime.xml'.
+	"""
+
 	suffix = datetime.now().strftime(".%Y-%m-%d-%H-%M-%S") + ".xml"
 	new_file = file if len(file.suffixes) < 2 else file.parent / str(file.stem).split('.')[0]
 
@@ -33,6 +56,21 @@ def _create_filepath(file: Path) -> Path:
 
 
 def to_file(solution: Solution, file: Path) -> Path:
+	"""Exports a solution into a file.
+
+	Parameters
+	----------
+	solution : Solution
+		A solution.
+	file : Path
+		An *.xml file from which import the network and streams.
+
+	Returns
+	-------
+	filepath: Path
+		An *.xml filepath where the solution has been exported, depending on the input file name and the export time.
+	"""
+
 	logger = getLogger()
 
 	filepath = _create_filepath(file)

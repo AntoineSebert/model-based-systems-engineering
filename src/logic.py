@@ -81,7 +81,7 @@ class Framelet:
 			A short description of the Framelet
 		"""
 
-		return f"{self.instance.stream.name}/{self.instance.id}/{self.id}:{self.size}"
+		return f"{self.instance.stream.id}[{self.instance.stream.src.name}-{self.instance.stream.dest.name}]/{self.instance.local_deadline}/{self.id}:{self.size}"
 
 
 @dataclass
