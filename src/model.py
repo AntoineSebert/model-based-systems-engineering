@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from queue import PriorityQueue
 
 
 @dataclass
