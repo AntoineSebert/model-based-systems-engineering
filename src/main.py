@@ -64,7 +64,7 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams, solution = build(args.file, args.display_graph)
+	network, streams = build(args.file, args.display_graph)
 
 	results = simulate(network, streams, args.time, args.stop)
 

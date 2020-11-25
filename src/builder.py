@@ -92,6 +92,15 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		set(),
 	) for stream in root.iter("stream")}
 
+	allStreamRoutes = Solution([])
+	for stream in streams:
+		streamSolution = findStreamSolution(network, stream)
+		stream.streamSolution = streamSolution
+
+		# --- Only for debugging---
+		allStreamRoutes.streamSolutions.append(streamSolution)
+		# -------------------------
+
 	for stream in streams:
 		endsys = next(node for node in network.nodes if stream.src == node.name)
 		endsys.streams.append(stream)
@@ -99,12 +108,9 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		
 
 	# Perform k-shortest search for all streams
-	solution = Solution([])
-	for stream in streams:
-		stream_solution = findStreamSolution(network, stream)
-		solution.streamSolutions.append(stream_solution)
+
 	logger.info("done.")
 
-	solution.printSolution()
+	allStreamRoutes.printSolution()
 
-	return network, streams, solution
+	return network, streams
