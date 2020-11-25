@@ -13,7 +13,7 @@ from networkx import DiGraph, draw, spring_layout  # type: ignore
 from numpy import sqrt  # type: ignore
 
 
-def build(file: Path) -> tuple[DiGraph, set[Stream]]:
+def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Parameters
@@ -70,11 +70,12 @@ def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	print("Number of network links: {}".format(len(network.edges)))
 	print(network.edges)
 
-	pos = spring_layout(network, k=2 / sqrt(len(network.nodes())), iterations=50)
-	pyplot.subplots(figsize=(30, 30))
-	pyplot.subplot(121)
-	draw(network, pos=pos)
-	pyplot.show()
+	if display_graph:
+		pos = spring_layout(network, k=2 / sqrt(len(network.nodes())), iterations=50)
+		pyplot.subplots(figsize=(30, 30))
+		pyplot.subplot(121)
+		draw(network, pos=pos)
+		pyplot.show()
 
 	streams = {Stream(
 		stream.get("id"),

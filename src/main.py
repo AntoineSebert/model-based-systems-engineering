@@ -54,6 +54,7 @@ def _create_cli_parser() -> ArgumentParser:
 		default=False,
 	)
 	parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
+	parser.add_argument("-dg", "--display-graph", action="store_true", help="Display network as graph", dest="display_graph")
 
 	return parser
 
@@ -63,7 +64,7 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams = build(args.file)
+	network, streams = build(args.file, args.display_graph)
 
 	solution = simulate(network, streams, args.time, args.stop)
 

@@ -7,7 +7,7 @@ from model import Switch
 from networkx import DiGraph  # type: ignore
 
 
-def _events(time: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
+def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
 	misses = set()
 
 	for stream in streams:
@@ -38,7 +38,7 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
 	while loop_cond(time, time_limit):
 		print(time)
-		misses = _events(time, network, streams)
+		misses = _events(logger, time, network, streams)
 
 		if len(misses) != 0 and stop_on_miss:
 			break
