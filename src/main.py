@@ -64,11 +64,11 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams = build(args.file, args.display_graph)
+	network, streams, solution = build(args.file, args.display_graph)
 
-	solution = simulate(network, streams, args.time, args.stop)
+	results = simulate(network, streams, args.time, args.stop)
 
-	to_file(solution, args.file)
+	to_file(results, args.file)
 
 	exit()
 
