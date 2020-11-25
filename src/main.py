@@ -68,7 +68,7 @@ def main() -> int:
 
 	results = simulate(network, streams, args.time, args.stop)
 
-	to_file(results, args.file)
+	# to_file(results, args.file)
 
 	exit()
 

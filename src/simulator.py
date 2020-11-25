@@ -27,8 +27,8 @@ def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[St
 	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
 		switch.emit(time)
 
-	for stream in streams:
-		misses |= stream.src.receive(time)
+	# for stream in streams:
+	# 	misses |= stream.src.receive(time)
 
 	for stream in misses:
 		logger.warning(f"Missed deadline for {stream.id} at {time}")
