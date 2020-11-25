@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from queue import PriorityQueue
 from networkx import DiGraph
-from logic import Stream
+from logic import Stream, Framelet
 
 @dataclass
 class Device:
@@ -35,6 +35,7 @@ class Switch(Device):
 			priority, framelet = self.queue.get()
 			logging.info(f"Switch {self.name} received framelet from {framelet.to_string()}")
 
+
 			if time < framelet.instance.local_deadline:
 				misses.add(framelet.instance.stream)
 
@@ -50,7 +51,15 @@ class EndSystem(Device):
 	streams: list[Stream] = field(default_factory=list)
 	remainder: int = 0
 	ingress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
-	
+
+
+	def enqueueStreams(self, network, time):
+		for stream in self.streams:
+			if not (stream.period % time):
+
+
+
+
 	def emit(self: EndSystem, time: int, network: DiGraph, stream: Stream) -> None:
 
 		#todo: check deadline?
