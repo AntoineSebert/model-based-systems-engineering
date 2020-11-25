@@ -1,5 +1,5 @@
 from networkx.algorithms.simple_paths import all_simple_paths as ap
-from networkx.algorithms.shortest_paths import all_shortest_paths as asp
+from networkx.algorithms.simple_paths import shortest_simple_paths as ssp
 
 from model import StreamSolution, Route, Link, Device, Switch, EndSystem
 
@@ -9,7 +9,7 @@ def search_all(network, src, dest):
 
 
 def k_shortest(network, src, dest):
-    return asp(network, src, dest, weight='speed')
+    return ssp(network, src, dest, weight='speed')
 
 
 def findRoutes(pathGenerator, k):
