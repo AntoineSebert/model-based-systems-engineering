@@ -79,14 +79,22 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 
 	streams = {Stream(
 		stream.get("id"),
-		[node for node in network.nodes if node.name == stream.get("src")][0],
-		[node for node in network.nodes if node.name == stream.get("dest")][0],
+		#[node for node in network.nodes if node.name == stream.get("src")][0],
+		#[node for node in network.nodes if node.name == stream.get("dest")][0],
+		stream.get("src"),
+		stream.get("dest"),
 		stream.get("size"),
 		stream.get("period"),
 		stream.get("deadline"),
 		stream.get("rl"),
 		set(),
 	) for stream in root.iter("stream")}
+
+	for stream in streams:
+		endsys = next(node for node in network.nodes if stream.src == node.name)
+		endsys.streams.append(stream)
+	[print(node.name, ": ", node.streams, "\n\n") for node in network.nodes if isinstance(node,EndSystem)]
+		
 
 	logger.info("done.")
 

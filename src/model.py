@@ -4,6 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from queue import PriorityQueue
 from networkx import DiGraph
+from logic import Stream
 
 @dataclass
 class Device:
@@ -46,22 +47,22 @@ class Switch(Device):
 
 @dataclass(eq=False)
 class EndSystem(Device):
+	streams: list[Stream] = field(default_factory=list)
 	remainder: int = 0
 	ingress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
-
-	def addStream(self, stream: Stream) -> None:
-		self.ingress.append(stream)
-
+	
 	def emit(self: EndSystem, time: int, network: DiGraph, stream: Stream) -> None:
+
+		#todo: check deadline?
 
 		for framelet in self.ingress:
 			neighbors = network.edges(self)
 
-
 			for n in neighbors:
-				print("neigh: ", n, "+ \n\n\n\n")
+				pass
+				#print("neigh: ", n, "\n\n\n\n")
 
-			logging.info(f"EndSystem {self.name} emitted framelet")
+		logging.info(f"EndSystem {self.name} emitted framelet")
 
 
 	def receive(self: EndSystem, time: int) -> set['Stream']:

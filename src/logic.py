@@ -5,8 +5,6 @@ from dataclasses import dataclass, field
 from functools import total_ordering
 from typing import Union
 
-from model import EndSystem
-
 from networkx import DiGraph  # type: ignore
 
 
@@ -110,7 +108,7 @@ class StreamInstance(Sequence):
 	"""
 
 	stream: Stream
-	dest: EndSystem
+	dest: str
 	local_deadline: int
 	framelets: list[Framelet] = field(default_factory=list)
 
@@ -179,8 +177,8 @@ class Stream(Sequence):
 	"""
 
 	id: str
-	src: EndSystem
-	dest: EndSystem
+	src: str
+	dest: str
 	size: int
 	period: int
 	deadline: int

@@ -2,7 +2,7 @@ import logging
 
 from logic import Solution, Stream
 
-from model import Switch
+from model import Switch, EndSystem
 
 from networkx import DiGraph  # type: ignore
 
@@ -10,12 +10,9 @@ from networkx import DiGraph  # type: ignore
 def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
 	misses = set()
 
-	for stream in streams:
-		print("stream: ", stream.id)
-		stream.src.addStream(stream)
-
-	for stream in streams:
-		stream.src.emit(time, network, stream)
+	for endsys in network.nodes:
+		if isinstance(endsys, EndSystem):
+			endsys.emit(time, network)
 
 	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
 		misses |= switch.receive(time)
