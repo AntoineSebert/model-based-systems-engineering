@@ -20,8 +20,8 @@ def _add_streams(network_desc: Element, solution: Solution) -> None:
 	for stream in solution.streams:
 		stream_element = SubElement(network_desc, "stream", {
 			"id": str(stream.id),
-			"src": stream.src.name,
-			"dest": stream.dest.name,
+			"src": stream.src,
+			"dest": stream.dest,
 			"size": str(stream.size),
 			"period": str(stream.period),
 			"deadline": str(stream.deadline),

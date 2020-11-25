@@ -160,10 +160,10 @@ class Stream(Sequence):
 	----------
 	id : str
 		the name of the stream
-	src : EndSystem
+	src : str
 		a source device
-	dest : dict[EndSystem, int]
-		the destination devices, with devices as keys and redundancy levels as values
+	dest : str
+		name of the destination device
 	size : int
 		the size of the Stream
 	period : int

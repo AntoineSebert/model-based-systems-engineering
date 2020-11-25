@@ -55,6 +55,9 @@
     <link src="FRONT_CAM" dest="SW4" speed="1000"/>
     <link src="FRONT_RAD" dest="SW4" speed="1000"/>
 
+    <link src="SW4" dest="CTRL1" speed="1000"/>
+    <link src="SW4" dest="CTRL2" speed="1000"/>
+
     <!-- times in us -->
     <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20" deadline="2" rl="2"/>
     <stream id="Stream01" src="FRONT_CAM" dest="CTRL2" size="800" period="20" deadline="2" rl="2"/>

@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from queue import PriorityQueue
 from networkx import DiGraph
-from logic import Stream
+from logic import Stream, Framelet
 
 @dataclass
 class Device:
@@ -49,18 +49,23 @@ class Switch(Device):
 class EndSystem(Device):
 	streams: list[Stream] = field(default_factory=list)
 	remainder: int = 0
-	ingress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
-	
-	def emit(self: EndSystem, time: int, network: DiGraph, stream: Stream) -> None:
+	egress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
+
+	def emit(self: EndSystem, time: int, network: DiGraph) -> None:
 
 		#todo: check deadline?
 
-		for framelet in self.ingress:
-			neighbors = network.edges(self)
+		if (time % 100 == 0):
+
+			pass
+
+		neighbors = network.edges(self)
+		print("neighbors", neighbors)
+		for framelet in self.egress:
+			
 
 			for n in neighbors:
-				pass
-				#print("neigh: ", n, "\n\n\n\n")
+				print("neigh: ", n, "\n\n\n\n")
 
 		logging.info(f"EndSystem {self.name} emitted framelet")
 
@@ -68,12 +73,12 @@ class EndSystem(Device):
 	def receive(self: EndSystem, time: int) -> set['Stream']:
 		misses: set['Stream'] = set()
 
-		for framelet in self.ingress:
+		for framelet in self.egress:
 			logging.info(f"EndSystem {self.name} received framelet from")
 
 			#if time < framelet.instance.local_deadline:
 			#	misses.add(framelet.instance.stream)
 
-		self.ingress.clear()
+		self.egress.clear()
 
 		return misses
