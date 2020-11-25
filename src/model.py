@@ -61,22 +61,21 @@ class EndSystem(Device):
             pass # Add all streams
         else:
             index = 0
-            for stream in self.streams:
+            for stream in filter(lambda n: not (time % int(n.period)), self.streams):
                 size = int(stream.size)
                 #print("index", index, " size: ", size)
-                if not (time % int(stream.period)):
-                    while (size > 0):
-                        index = index + 1
-                        if (size < 64):
-                            self.egress.append(Framelet(index, stream.instances, size))
-                            size = size - 64
-                            print("size2: ", size)
-                            print("egress2: ", self.egress)
-                        else:
-                            self.egress.append(Framelet(index, stream.instances, 64))
-                            size = size - 64
-                            print("size1: ", size)
-                            print("egress1: ", self.egress)
+                while (size > 0):
+                    index = index + 1
+                    if (size < 64):
+                        self.egress.append(Framelet(index, stream.instances, size))
+                        size = size - 64
+                        print("size2: ", size)
+                        print("egress2: ", self.egress)
+                    else:
+                        self.egress.append(Framelet(index, stream.instances, 64))
+                        size = size - 64
+                        print("size1: ", size)
+                        print("egress1: ", self.egress)
                     
 
     def emit(self: EndSystem, time: int, network: DiGraph) -> None:
@@ -103,3 +102,10 @@ class EndSystem(Device):
         self.ingress.clear()
 
         return misses
+
+
+@dataclass
+class InputPort:
+    name: str
+    def __hash__(self):
+        return hash(self.name)

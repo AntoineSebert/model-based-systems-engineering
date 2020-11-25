@@ -11,21 +11,19 @@ def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[St
 	misses = set()
 
 	# Check if new framelets should be added to EndSystem queue for emission
+	for endSystem in filter(lambda n: isinstance(n, EndSystem), network.nodes):
+		endSystem.enqueueStreams(network, time)
+
+	# Go through all end in network and emit from egress queue
 	for device in network.nodes:
-		if isinstance(device, EndSystem):
-			device.enqueueStreams(network, time)
-	# Go through all devices in network and emit from egress queue
-	for endsys in network.nodes:
-		if isinstance(endsys, EndSystem):
-			endsys.emit(time, network)
+		device.emit(time, network)
 
 	# For all switches, receive framelets on ingress and add to egress queue
-	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
-		misses |= switch.receive(time)
+	for device in network.nodes:
+		misses |= device.receive(time, network)
 
-
-	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
-		switch.emit(time)
+	#for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
+		#misses |= switch.receive(time)
 
 	# for stream in streams:
 	# 	misses |= stream.src.receive(time)
