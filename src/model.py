@@ -4,7 +4,7 @@ import logging
 from dataclasses import dataclass, field
 from queue import PriorityQueue
 from networkx import DiGraph
-from logic import Stream, Framelet
+from logic import Stream, Framelet, Route, Link, Solution, StreamSolution
 from typing import List, Tuple
 from copy import deepcopy
 
@@ -52,26 +52,41 @@ class Switch(Device):
 class EndSystem(Device):
     streams: list[Stream] = field(default_factory=list)
     remainder: int = 0
-    ingress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
+    ingress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
+    egress: list[Framelet] = field(default_factory=list)
 
-    def enqueueStreams(self, network, time):
+    def enqueueStreams(self, network, time): #route argument needed
         # First iteration
         if not time:
             pass # Add all streams
         else:
+            index = 0
             for stream in self.streams:
-                if not (int(stream.period) % time):
-                    pass
+                size = int(stream.size)
+                #print("index", index, " size: ", size)
+                if not (time % int(stream.period)):
+                    while (size > 0):
+                        index = index + 1
+                        if (size < 64):
+                            self.egress.append(Framelet(index, stream.instances, size))
+                            size = size - 64
+                            print("size2: ", size)
+                            print("egress2: ", self.egress)
+                        else:
+                            self.egress.append(Framelet(index, stream.instances, 64))
+                            size = size - 64
+                            print("size1: ", size)
+                            print("egress1: ", self.egress)
+                    
 
     def emit(self: EndSystem, time: int, network: DiGraph) -> None:
         # todo: check deadline?
 
-        for framelet in self.ingress:
-            neighbors = network.edges(self)
-
-            for n in neighbors:
-                pass
-        # print("neigh: ", n, "\n\n\n\n")
+        for framelet in self.egress:
+            print("\n\n\n\n\nframelet: ", framelet)
+            frameDest = framelet.route.dest
+            print("\n\n\n\n\nframeDest: ", frameDest)
+            network.nodes(frameDest).ingress.append(Framelet)
 
         logging.info(f"EndSystem {self.name} emitted framelet")
 
@@ -88,81 +103,3 @@ class EndSystem(Device):
         self.ingress.clear()
 
         return misses
-
-
-@dataclass
-class Link:
-    src: str
-    dest: str
-
-    def __hash__(self):
-        return hash((self.src, self.dest))
-
-    def __eq__(self, other):
-        if isinstance(other, Link) and self.src == other.src and self.dest == other.dest:
-            return True
-        return False
-
-
-@dataclass
-class Route:
-    num: int
-    links: List[Link]
-
-    def __hash__(self):
-        # print("using hash")
-        # print(tuple(self.links))
-        # print(hash(tuple(self.links)))
-        return hash(tuple(self.links))
-
-    def __eq__(self, other):
-        # print("Using eq")
-        if isinstance(other, Route) and len(self.links) == len(other.links):
-            for index in range(len(self.links)):
-                if self.links[index] != other.links[index]:
-                    return False
-            return True
-        return False
-
-
-@dataclass
-class StreamSolution:
-    stream: Stream
-    routes: List[Route]
-
-
-@dataclass
-class Solution:
-    streamSolutions: List[StreamSolution]
-
-    def printSolution(self):
-        print("----------------------------------------------")
-        print("---------Printing all routes found------------")
-        print("----------------------------------------------")
-        for streamSolution in self.streamSolutions:
-            print()
-            print("----------------------------")
-            attrs = vars(streamSolution.stream)
-            print(', '.join("%s: %s" % item for item in attrs.items()))
-            if not streamSolution.routes:
-                print("No routes stored for stream!")
-            for route in streamSolution.routes:
-                print("Route{}:".format(route.num))
-                for step in route.links:
-                    print(step)
-            print("----------------------------")
-
-    def matchRedudancy(self):
-        for streamSolution in self.streamSolutions:
-            counter = 0
-            numberOfRoute = len(streamSolution.routes)
-            while len(streamSolution.routes) < int(streamSolution.stream.rl):
-                numberOfRoute += 1
-                route = deepcopy(streamSolution.routes[counter])
-                route.num = numberOfRoute
-                streamSolution.routes.append(route)
-
-                if counter == int(streamSolution.stream.rl) - 1:
-                    counter = 0
-                else:
-                    counter += 1

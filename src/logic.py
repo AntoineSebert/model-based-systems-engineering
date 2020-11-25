@@ -3,11 +3,11 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from typing import Union
+from typing import Union, List
 
 from networkx import DiGraph  # type: ignore
 
-
+'''
 @dataclass
 class Route:
 	subgraph: DiGraph
@@ -18,6 +18,86 @@ class Route:
 
 	def transmission_time(self: Route, size: int) -> int:
 		return sum(-(-size // speed) for u, v, speed in self.subgraph.edges(data="speed"))
+'''
+
+
+@dataclass
+class Link:
+    src: str
+    dest: str
+
+    def __hash__(self):
+        return hash((self.src, self.dest))
+
+    def __eq__(self, other):
+        if isinstance(other, Link) and self.src == other.src and self.dest == other.dest:
+            return True
+        return False
+
+@dataclass
+class StreamSolution:
+    stream: Stream
+    routes: List[Route]
+
+
+@dataclass
+class Solution:
+    streamSolutions: List[StreamSolution]
+
+    def printSolution(self):
+        print("----------------------------------------------")
+        print("---------Printing all routes found------------")
+        print("----------------------------------------------")
+        for streamSolution in self.streamSolutions:
+            print()
+            print("----------------------------")
+            attrs = vars(streamSolution.stream)
+            print(', '.join("%s: %s" % item for item in attrs.items()))
+            if not streamSolution.routes:
+                print("No routes stored for stream!")
+            for route in streamSolution.routes:
+                print("Route{}:".format(route.num))
+                for step in route.links:
+                    print(step)
+            print("----------------------------")
+
+    def matchRedudancy(self):
+        for streamSolution in self.streamSolutions:
+            counter = 0
+            numberOfRoute = len(streamSolution.routes)
+            while len(streamSolution.routes) < int(streamSolution.stream.rl):
+                numberOfRoute += 1
+                route = deepcopy(streamSolution.routes[counter])
+                route.num = numberOfRoute
+                streamSolution.routes.append(route)
+
+                if counter == int(streamSolution.stream.rl) - 1:
+                    counter = 0
+                else:
+                    counter += 1
+
+
+@dataclass
+class Route:
+    num: int
+    links: List[Link]
+
+    def __hash__(self):
+        # print("using hash")
+        # print(tuple(self.links))
+        # print(hash(tuple(self.links)))
+        return hash(tuple(self.links))
+
+    def __eq__(self, other):
+        # print("Using eq")
+        if isinstance(other, Route) and len(self.links) == len(other.links):
+            for index in range(len(self.links)):
+                if self.links[index] != other.links[index]:
+                    return False
+            return True
+        return False
+
+
 
 
 @dataclass
@@ -46,6 +126,7 @@ class Framelet:
 	id: int
 	instance: StreamInstance
 	size: int
+	route: Route
 
 	def __eq__(self: Framelet, other: object) -> bool:
 		if isinstance(other, Framelet):
