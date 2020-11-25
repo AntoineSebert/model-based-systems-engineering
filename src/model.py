@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass, field
 from queue import PriorityQueue
-
+from networkx import DiGraph
 
 @dataclass
 class Device:
@@ -49,17 +49,29 @@ class EndSystem(Device):
 	remainder: int = 0
 	ingress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
 
-	def emit(self: EndSystem, time: int) -> None:
-		pass
+	def addStream(self, stream: Stream) -> None:
+		self.ingress.append(stream)
+
+	def emit(self: EndSystem, time: int, network: DiGraph, stream: Stream) -> None:
+
+		for framelet in self.ingress:
+			neighbors = network.edges(self)
+
+
+			for n in neighbors:
+				print("neigh: ", n, "+ \n\n\n\n")
+
+			logging.info(f"EndSystem {self.name} emitted framelet")
+
 
 	def receive(self: EndSystem, time: int) -> set['Stream']:
 		misses: set['Stream'] = set()
 
 		for framelet in self.ingress:
-			logging.info(f"EndSystem {self.name} received framelet from {framelet.to_string()}")
+			logging.info(f"EndSystem {self.name} received framelet from")
 
-			if time < framelet.instance.local_deadline:
-				misses.add(framelet.instance.stream)
+			#if time < framelet.instance.local_deadline:
+			#	misses.add(framelet.instance.stream)
 
 		self.ingress.clear()
 

@@ -11,7 +11,11 @@ def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[St
 	misses = set()
 
 	for stream in streams:
-		stream.src.emit(time)
+		print("stream: ", stream.id)
+		stream.src.addStream(stream)
+
+	for stream in streams:
+		stream.src.emit(time, network, stream)
 
 	for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
 		misses |= switch.receive(time)
@@ -37,7 +41,8 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	misses: set[Stream] = set()
 
 	while loop_cond(time, time_limit):
-		print(time)
+		#print(time)
+
 		misses = _events(logger, time, network, streams)
 
 		if len(misses) != 0 and stop_on_miss:
