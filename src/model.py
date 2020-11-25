@@ -53,15 +53,14 @@ class EndSystem(Device):
     streams: list[Stream] = field(default_factory=list)
     remainder: int = 0
     ingress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
+    egress: list['Framelet'] = field(default_factory=list)  # replace by dict(time, frames)
 
     def enqueueStreams(self, network, time):
-        # First iteration
-        if not time:
-            pass # Add all streams
+        if not time: # Enqueue all streams on first iteration
+            pass
         else:
-            for stream in self.streams:
-                if not (int(stream.period) % time):
-                    pass
+            for stream in filter(lambda n: not (int(n.period) % time), self.streams):
+                pass
 
     def emit(self: EndSystem, time: int, network: DiGraph) -> None:
         # todo: check deadline?
@@ -91,14 +90,17 @@ class EndSystem(Device):
 
 
 @dataclass
+class InputPort:
+    name: str
+    def __hash__(self):
+        return hash(self.name)
+
+@dataclass
 class Link:
     src: str
     dest: str
 
-    def __hash__(self):
-        return hash((self.src, self.dest))
-
-    def __eq__(self, other):
+    def noRefEq(self, other):
         if isinstance(other, Link) and self.src == other.src and self.dest == other.dest:
             return True
         return False
@@ -110,16 +112,13 @@ class Route:
     links: List[Link]
 
     def __hash__(self):
-        # print("using hash")
-        # print(tuple(self.links))
-        # print(hash(tuple(self.links)))
         return hash(tuple(self.links))
 
     def __eq__(self, other):
         # print("Using eq")
         if isinstance(other, Route) and len(self.links) == len(other.links):
             for index in range(len(self.links)):
-                if self.links[index] != other.links[index]:
+                if self.links[index].noRefEq(other.links[index]):
                     return False
             return True
         return False

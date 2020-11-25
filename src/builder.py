@@ -6,9 +6,9 @@ from logic import Stream
 
 from matplotlib import pyplot  # type: ignore
 
-from model import EndSystem, Switch, Solution
+from model import EndSystem, Switch, InputPort, Solution
 
-from networkx import DiGraph, draw, spring_layout  # type: ignore
+from networkx import DiGraph, DiGraph, draw, spring_layout  # type: ignore
 
 from numpy import sqrt  # type: ignore
 
@@ -65,18 +65,24 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 			dest = Switch(link.get("dest"))
 		else:
 			dest = EndSystem(link.get("dest"))
-		network.add_edge(src, dest, speed=int(link.get("speed")))
+
+		counter = 1
+		while network.has_node(InputPort(dest.name + "_PORT_" + str(counter))):
+			counter += 1
+		intermediateNode = InputPort(dest.name + "_PORT_" + str(counter))
+		network.add_edge(src, intermediateNode, speed=(1.0 / float(link.get('speed'))))  # src to intermediate node
+		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
 
 	print("Number of network devices: {}".format(len(network.nodes)))
 	print(network.nodes)
-	print("Number of network links: {}".format(len(network.edges)))
-	print(network.edges)
+	edges = network.edges(data=True)
+	print(edges)
 
 	if display_graph:
-		pos = spring_layout(network, k=2 / sqrt(len(network.nodes())), iterations=50)
+		pos = spring_layout(network, k=3 / sqrt(len(network.nodes())), iterations=50)
 		pyplot.subplots(figsize=(30, 30))
 		pyplot.subplot(121)
-		draw(network, pos=pos)
+		draw(network, pos=pos, connectionstyle='arc3, rad = 0.1')
 		pyplot.show()
 
 	streams = {Stream(
@@ -95,6 +101,8 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 	allStreamRoutes = Solution([])
 	for stream in streams:
 		streamSolution = findStreamSolution(network, stream)
+		print("test")
+		print(streamSolution)
 		stream.streamSolution = streamSolution
 
 		# --- Only for debugging---

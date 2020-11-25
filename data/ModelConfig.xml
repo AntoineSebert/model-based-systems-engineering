@@ -31,6 +31,7 @@
     <!-- Links are directional-->
     <!-- speed = byte/us-->
     <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
     <link src="REAR_SVCAM" dest="SW1" speed="1000"/>
     <link src="LEFT_SVCAM" dest="SW1" speed="1000"/>
     <link src="RIGHT_SVCAM" dest="SW1" speed="1000"/>
