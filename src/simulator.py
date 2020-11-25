@@ -1,6 +1,6 @@
 import logging
 
-from logic import Solution, Stream
+from logic import Results, Stream
 
 from model import Switch, EndSystem
 
@@ -37,7 +37,7 @@ def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[St
 
 
 # resources in OneDrive slides
-def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Solution:
+def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
 	logger = logging.getLogger()
 
 	time: int = 0
@@ -58,4 +58,4 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
 	logger.info("done.")
 
-	return Solution(network, streams, {})
+	return Results(network, streams, {})

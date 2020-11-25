@@ -208,7 +208,7 @@ class Stream(Sequence):
 
 
 @dataclass
-class Solution:
+class Results:
 	"""
 	A class used to represent a Solution
 
