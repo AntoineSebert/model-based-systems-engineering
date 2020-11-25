@@ -25,6 +25,8 @@
     <device name="SW2" type="Switch"/>
     <device name="SW3" type="Switch"/>
     <device name="SW4" type="Switch"/>
+    <device name="SW5" type="Switch"/>
+    <device name="SW6" type="Switch"/>
 
     <!-- Links are directional-->
     <!-- speed = byte/us-->
@@ -45,10 +47,24 @@
 
     <link src="CTRL1" dest="SW3" speed="1000"/>
     <link src="CTRL2" dest="SW3" speed="1000"/>
+    <link src="CTRL1" dest="SW5" speed="1000"/>
+    <link src="CTRL2" dest="SW5" speed="1000"/>
 
     <link src="SW3" dest="ECM" speed="1000"/>
     <link src="SW3" dest="EBCM" speed="1000"/>
     <link src="SW3" dest="EPS" speed="1000"/>
+
+    <link src="EPS" dest="SW6" speed="1000"/>
+    <link src="ECM" dest="SW6" speed="1000"/>
+    <link src="EBCM" dest="SW6" speed="1000"/>
+
+    <link src="SW6" dest="CTRL2" speed="1000"/>
+    <link src="SW6" dest="CTRL1" speed="1000"/>
+
+    <link src="SW5" dest="FRONT_CAM" speed="1000"/>
+    <link src="SW5" dest="FRONT_RAD" speed="1000"/>
+    <link src="SW5" dest="REAR_CAM" speed="1000"/>
+    <link src="SW5" dest="REAR_RAD" speed="1000"/>
 
     <link src="RIGHT_FRONT_RAD" dest="SW4" speed="1000"/>
     <link src="LEFT_FRONT_RAD" dest="SW4" speed="1000"/>

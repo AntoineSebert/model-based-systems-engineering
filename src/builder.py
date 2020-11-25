@@ -6,11 +6,13 @@ from logic import Stream
 
 from matplotlib import pyplot  # type: ignore
 
-from model import EndSystem, Switch
+from model import EndSystem, Switch, Solution
 
 from networkx import DiGraph, draw, spring_layout  # type: ignore
 
 from numpy import sqrt  # type: ignore
+
+from search import findStreamSolution
 
 
 def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
@@ -63,7 +65,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 			dest = Switch(link.get("dest"))
 		else:
 			dest = EndSystem(link.get("dest"))
-		network.add_edge(src, dest, speed=link.get("speed"))
+		network.add_edge(src, dest, speed=int(link.get("speed")))
 
 	print("Number of network devices: {}".format(len(network.nodes)))
 	print(network.nodes)
@@ -93,9 +95,16 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 	for stream in streams:
 		endsys = next(node for node in network.nodes if stream.src == node.name)
 		endsys.streams.append(stream)
-	[print(node.name, ": ", node.streams, "\n\n") for node in network.nodes if isinstance(node,EndSystem)]
+	[print(node.name, ":\n", node.streams, "\n\n") for node in network.nodes if isinstance(node,EndSystem)]
 		
 
+	# Perform k-shortest search for all streams
+	solution = Solution([])
+	for stream in streams:
+		stream_solution = findStreamSolution(network, stream)
+		solution.streamSolutions.append(stream_solution)
 	logger.info("done.")
 
-	return network, streams
+	solution.printSolution()
+
+	return network, streams, solution
