@@ -74,9 +74,12 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
 
 	print("Number of network devices: {}".format(len(network.nodes)))
+	print("Nodes:")
 	print(network.nodes)
 	edges = network.edges(data=True)
+	print("\n Edges:")
 	print(edges)
+	print("\n")
 
 	if display_graph:
 		pos = spring_layout(network, k=3 / sqrt(len(network.nodes())), iterations=50)

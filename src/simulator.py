@@ -1,8 +1,10 @@
 import logging
 
 from logic import Results, Stream
-
 from model import Switch, EndSystem
+from search import findStreamSolution
+from itertools import permutations
+from copy import deepcopy
 
 from networkx import DiGraph  # type: ignore
 
@@ -51,3 +53,26 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	logger.info("done.")
 
 	return Results(network, streams, {})
+
+
+class RedundancyChecker:
+	def __init__(self, network: DiGraph, streams: set[Stream]):
+		self.failedStreams = []
+		self.goodStreams = []
+		self.network = deepcopy(network)
+		self.streams = streams
+
+	def checkRedundancy(self, fullCheck: bool = False) -> bool:
+		for stream in self.streams:
+			self.network.number_of_edges()
+			print("Finding paths for {}".format(stream))
+			streamRoutes = findStreamSolution(self.network, stream).routes
+			if len(streamRoutes) >= int(stream.rl):
+				print("Good: {}".format(stream))
+				self.goodStreams.append(stream)
+			else:
+				print("Bad: {}".format(stream))
+				self.failedStreams.append(stream)
+				streamRoutes = findStreamSolution(self.network, stream, method="all")
+				# Simulate to test where redundancy is missing
+

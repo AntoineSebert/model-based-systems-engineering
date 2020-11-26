@@ -1,7 +1,12 @@
 from networkx.algorithms.simple_paths import all_simple_paths as ap
 from networkx.algorithms.simple_paths import shortest_simple_paths as ssp
+from networkx.algorithms.connectivity.disjoint_paths import edge_disjoint_paths as edp
 
 from model import StreamSolution, Route, Link, Device, Switch, EndSystem
+
+
+def find_disjoint_paths(network, src, dest):
+    return edp(network, src, dest)
 
 
 def search_all(network, src, dest):
@@ -29,7 +34,7 @@ def findRoutes(pathGenerator, k):
     return routes
 
 
-def findStreamSolution(network, stream) -> StreamSolution:
+def findStreamSolution(network, stream, method: str = ) -> StreamSolution:
     # Determine src type
     src = None
     dest = None
@@ -43,13 +48,14 @@ def findStreamSolution(network, stream) -> StreamSolution:
     else:
         dest = EndSystem(stream.dest)
 
-    print("\nFinding path from {0} to {1}".format(src.name, dest.name))
+    # print("\nFinding path from {0} to {1}".format(src.name, dest.name))
     streamSolution = StreamSolution(stream, [])
     try:
-        pathGenerator = k_shortest(network, src, dest)
+        pathGenerator = find_disjoint_paths(network, src, dest)
         streamSolution.routes.extend(findRoutes(pathGenerator, int(stream.rl)))
 
-        print("Found at least 1 path\n")
+        # print("Found at least 1 path\n")
     except:
-        print("!!!There exists no paths from {0} to {1} !!!\n".format(src.name, dest.name))
+        pass
+        # print("!!!There exists no paths from {0} to {1} !!!\n".format(src.name, dest.name))
     return streamSolution

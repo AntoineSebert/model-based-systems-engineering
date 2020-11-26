@@ -6,7 +6,7 @@ from builder import build
 
 from output import to_file
 
-from simulator import simulate
+from simulator import simulate, RedundancyChecker
 
 
 def _create_cli_parser() -> ArgumentParser:
@@ -55,6 +55,8 @@ def _create_cli_parser() -> ArgumentParser:
 	)
 	parser.add_argument("--version", action="version", version="%(prog)s 0.1.0")
 	parser.add_argument("-dg", "--display-graph", action="store_true", help="Display network as graph", dest="display_graph")
+	parser.add_argument("-sim", "--simulate", action="store_true", help="Simulate network traffic", dest="sim_on")
+	parser.add_argument("-cr", "--check-redudancy", action="store_true", help="Check redundancy satisfaction of network", dest="check_redudancy")
 
 	return parser
 
@@ -66,7 +68,12 @@ def main() -> int:
 
 	network, streams = build(args.file, args.display_graph)
 
-	results = simulate(network, streams, args.time, args.stop)
+	if args.check_redudancy:
+		redundancyChecker = RedundancyChecker(network, streams)
+		redundancyOk = redundancyChecker.checkRedundancy(False)
+
+	if args.sim_on:
+		results = simulate(network, streams, args.time, args.stop)
 
 	# to_file(results, args.file)
 
