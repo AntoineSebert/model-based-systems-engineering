@@ -95,6 +95,8 @@ class EndSystem(Device):
     def emit(self: EndSystem, time: int, network: DiGraph) -> None:
         # todo: check deadline?
         # todo: Add time check. emit doesn't care what link speeds are. Emits all framelets on each iteration.
+
+        '''
         for i in range(len(self.egress)):
             # print(len(self.egress))
             framelet = self.egress.pop()
@@ -102,6 +104,39 @@ class EndSystem(Device):
             nextStep.dest = nextStep.dest.split('$')[0]
             receiver = next(device for device in network._node if device == Device(nextStep.dest))
             receiver.ingress.append(framelet)
+        '''
+
+        iterationTime = 100
+        inIteration = 0
+        remainingSize = 0
+        testIt = 0
+
+        frame = next(fr for fr in self.egress)
+        remainingSize = frame.size
+        
+        while (inIteration < iterationTime and testIt < 100):
+            if (remainingSize <= 0 and self.egress):
+                frame = next(fr for fr in self.egress)
+                remainingSize = frame.size
+
+
+            testIt += 1
+            
+
+            sendable = min(remainingSize, iterationTime * 1000) #1000 should be link speed
+            print("sendable: ", sendable)
+            
+            remainingSize -= sendable
+            
+            if remainingSize <= 0:
+                nextStep = next(link for link in frame.route.links if link.src == self.name)
+                nextStep.dest = nextStep.dest.split('$')[0]
+                receiver = next(device for device in network._node if device == Device(nextStep.dest))
+                receiver.ingress.append(frame)
+                
+            print("sendable: ", float(sendable))
+            print("inIteration: ", (float(sendable)/1000.0))
+            inIteration += (float(sendable)/1000.0)
 
         logging.info(f"EndSystem {self.name} emitted framelet")
 
