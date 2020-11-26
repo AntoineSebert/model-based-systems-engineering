@@ -15,7 +15,7 @@ from numpy import sqrt  # type: ignore
 from search import findStreamSolution
 
 
-def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
+def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Parameters
@@ -30,6 +30,8 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 	"""
 
 	logger = getLogger()
+
+	monetarycost = 0
 
 	logger.info(f"Importing the model from '{file}'...")
 
@@ -47,6 +49,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 			network.add_node(EndSystem(device.get("name")))
 		elif device_type == "Switch":
 			network.add_node(Switch(device.get("name")))
+			monetarycost += 2
 
 	# Connect devices by links
 	for link in root.iter("link"):
@@ -58,6 +61,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		# Determine src type
 		if str(link.get("src")).startswith("SW"):
 			src = Switch(link.get("src"))
+
 		else:
 			src = EndSystem(link.get("src"))
 		# Determine destination type
@@ -70,8 +74,9 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		while network.has_node(InputPort(dest.name + "$PORT" + str(counter))):
 			counter += 1
 		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
-		network.add_edge(src, intermediateNode, speed=(float(link.get('speed'))))  # src to intermediate node
+		network.add_edge(src, intermediateNode, speed=(1.0 / float(link.get('speed'))))  # src to intermediate node
 		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
+		monetarycost += 1
 
 	print("Number of network devices: {}".format(len(network.nodes)))
 	print(network.nodes)
@@ -121,4 +126,4 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 
 	allStreamRoutes.printSolution()
 
-	return network, streams
+	return (network, streams, monetarycost)

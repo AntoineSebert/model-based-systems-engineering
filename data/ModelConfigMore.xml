@@ -1,0 +1,173 @@
+<NetworkDescription>
+    <!-- Expected order: devices, links, streams-->
+
+    <device name="FRONT_CAM" type="EndSystem"/>
+    <device name="FRONT_RAD" type="EndSystem"/>
+    <device name="FRONT_SVCAM" type="EndSystem"/>
+    <device name="LEFT_FRONT_RAD" type="EndSystem"/>
+    <device name="RIGHT_FRONT_RAD" type="EndSystem"/>
+    <device name="LEFT_SVCAM" type="EndSystem"/>
+    <device name="RIGHT_SVCAM" type="EndSystem"/>
+    <device name="LEFT_REAR_RAD" type="EndSystem"/>
+    <device name="RIGHT_REAR_RAD" type="EndSystem"/>
+    <device name="REAR_CAM" type="EndSystem"/>
+    <device name="REAR_RAD" type="EndSystem"/>
+    <device name="REAR_SVCAM" type="EndSystem"/>
+    <device name="CTRL1" type="EndSystem"/>
+    <device name="CTRL2" type="EndSystem"/>
+    <device name="ECM" type="EndSystem"/>
+    <device name="EBCM" type="EndSystem"/>
+    <device name="EPS" type="EndSystem"/>
+    <device name="IMU1" type="EndSystem"/>
+    <device name="IMU2" type="EndSystem"/>
+    <device name="MAPLOC" type="EndSystem"/>
+    <device name="SW1" type="Switch"/>
+    <device name="SW2" type="Switch"/>
+    <device name="SW3" type="Switch"/>
+    <device name="SW4" type="Switch"/>
+    <device name="SW5" type="Switch"/>
+    <device name="SW6" type="Switch"/>
+
+    <!-- Links are directional-->
+    <!-- speed = byte/us-->
+    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="REAR_SVCAM" dest="SW1" speed="1000"/>
+    <link src="LEFT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="RIGHT_SVCAM" dest="SW1" speed="1000"/>
+
+    <link src="SW1" dest="CTRL1" speed="1000"/>
+
+    <link src="RIGHT_REAR_RAD" dest="SW2" speed="1000"/>
+    <link src="LEFT_REAR_RAD" dest="SW2" speed="1000"/>
+    <link src="REAR_CAM" dest="SW2" speed="1000"/>
+    <link src="REAR_RAD" dest="SW2" speed="1000"/>
+
+    <link src="SW2" dest="CTRL1" speed="1000"/>
+    <link src="SW2" dest="CTRL2" speed="1000"/>
+
+    <link src="CTRL1" dest="SW3" speed="1000"/>
+    <link src="CTRL2" dest="SW3" speed="1000"/>
+    <link src="CTRL1" dest="SW5" speed="1000"/>
+    <link src="CTRL2" dest="SW5" speed="1000"/>
+
+    <link src="SW3" dest="ECM" speed="1000"/>
+    <link src="SW3" dest="EBCM" speed="1000"/>
+    <link src="SW3" dest="EPS" speed="1000"/>
+
+    <link src="EPS" dest="SW6" speed="1000"/>
+    <link src="ECM" dest="SW6" speed="1000"/>
+    <link src="EBCM" dest="SW6" speed="1000"/>
+
+    <link src="SW6" dest="CTRL2" speed="1000"/>
+    <link src="SW6" dest="CTRL1" speed="1000"/>
+
+    <link src="SW5" dest="FRONT_CAM" speed="1000"/>
+    <link src="SW5" dest="FRONT_RAD" speed="1000"/>
+    <link src="SW5" dest="REAR_CAM" speed="1000"/>
+    <link src="SW5" dest="REAR_RAD" speed="1000"/>
+
+    <link src="RIGHT_FRONT_RAD" dest="SW4" speed="1000"/>
+    <link src="LEFT_FRONT_RAD" dest="SW4" speed="1000"/>
+    <link src="FRONT_CAM" dest="SW4" speed="1000"/>
+    <link src="FRONT_RAD" dest="SW4" speed="1000"/>
+
+    <link src="SW4" dest="CTRL1" speed="1000"/>
+    <link src="SW4" dest="CTRL2" speed="1000"/>
+
+
+    <!-- copy of all links for double redundancy-->
+    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="REAR_SVCAM" dest="SW1" speed="1000"/>
+    <link src="LEFT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="RIGHT_SVCAM" dest="SW1" speed="1000"/>
+
+    <link src="SW1" dest="CTRL1" speed="1000"/>
+
+    <link src="RIGHT_REAR_RAD" dest="SW2" speed="1000"/>
+    <link src="LEFT_REAR_RAD" dest="SW2" speed="1000"/>
+    <link src="REAR_CAM" dest="SW2" speed="1000"/>
+    <link src="REAR_RAD" dest="SW2" speed="1000"/>
+
+    <link src="SW2" dest="CTRL1" speed="1000"/>
+    <link src="SW2" dest="CTRL2" speed="1000"/>
+
+    <link src="CTRL1" dest="SW3" speed="1000"/>
+    <link src="CTRL2" dest="SW3" speed="1000"/>
+    <link src="CTRL1" dest="SW5" speed="1000"/>
+    <link src="CTRL2" dest="SW5" speed="1000"/>
+
+    <link src="SW3" dest="ECM" speed="1000"/>
+    <link src="SW3" dest="EBCM" speed="1000"/>
+    <link src="SW3" dest="EPS" speed="1000"/>
+
+    <link src="EPS" dest="SW6" speed="1000"/>
+    <link src="ECM" dest="SW6" speed="1000"/>
+    <link src="EBCM" dest="SW6" speed="1000"/>
+
+    <link src="SW6" dest="CTRL2" speed="1000"/>
+    <link src="SW6" dest="CTRL1" speed="1000"/>
+
+    <link src="SW5" dest="FRONT_CAM" speed="1000"/>
+    <link src="SW5" dest="FRONT_RAD" speed="1000"/>
+    <link src="SW5" dest="REAR_CAM" speed="1000"/>
+    <link src="SW5" dest="REAR_RAD" speed="1000"/>
+
+    <link src="RIGHT_FRONT_RAD" dest="SW4" speed="1000"/>
+    <link src="LEFT_FRONT_RAD" dest="SW4" speed="1000"/>
+    <link src="FRONT_CAM" dest="SW4" speed="1000"/>
+    <link src="FRONT_RAD" dest="SW4" speed="1000"/>
+
+    <link src="SW4" dest="CTRL1" speed="1000"/>
+    <link src="SW4" dest="CTRL2" speed="1000"/>
+
+    <!-- times in us -->
+    <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20" deadline="2" rl="2"/>
+    <stream id="Stream01" src="FRONT_CAM" dest="CTRL2" size="800" period="20" deadline="2" rl="2"/>
+    <stream id="Stream02" src="FRONT_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream03" src="FRONT_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream04" src="FRONT_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
+    <stream id="Stream05" src="LEFT_FRONT_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream06" src="LEFT_FRONT_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream07" src="RIGHT_FRONT_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream08" src="RIGHT_FRONT_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream09" src="LEFT_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
+    <stream id="Stream10" src="RIGHT_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
+    <stream id="Stream11" src="LEFT_REAR_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="1"/>
+    <stream id="Stream12" src="LEFT_REAR_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="1"/>
+    <stream id="Stream13" src="RIGHT_REAR_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="1"/>
+    <stream id="Stream14" src="RIGHT_REAR_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="1"/>
+    <stream id="Stream15" src="REAR_CAM" dest="CTRL1" size="600" period="40" deadline="4" rl="2"/>
+    <stream id="Stream16" src="REAR_CAM" dest="CTRL2" size="600" period="40" deadline="4" rl="2"/>
+    <stream id="Stream17" src="REAR_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream18" src="REAR_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
+    <stream id="Stream19" src="REAR_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
+
+
+    <stream id="Stream20" src="CTRL1" dest="FRONT_CAM" size="100" period="20" deadline="4" rl="2"/>
+    <stream id="Stream21" src="CTRL1" dest="FRONT_RAD" size="100" period="20" deadline="4" rl="2"/>
+    <stream id="Stream22" src="CTRL1" dest="REAR_CAM" size="100" period="20" deadline="4" rl="1"/>
+    <stream id="Stream23" src="CTRL1" dest="REAR_RAD" size="100" period="20" deadline="4" rl="1"/>
+
+    <stream id="Stream24" src="CTRL2" dest="FRONT_CAM" size="100" period="20" deadline="4" rl="1"/>
+    <stream id="Stream25" src="CTRL2" dest="FRONT_RAD" size="100" period="20" deadline="4" rl="1"/>
+    
+    <stream id="Stream26" src="CTRL1" dest="ECM" size="100" period="40" deadline="4" rl="1"/>
+    <stream id="Stream27" src="CTRL2" dest="ECM" size="100" period="40" deadline="4" rl="1"/>
+    
+    <stream id="Stream28" src="CTRL1" dest="EBCM" size="100" period="40" deadline="2" rl="2"/>
+    <stream id="Stream29" src="CTRL2" dest="EBCM" size="100" period="40" deadline="2" rl="1"/>
+    
+    <stream id="Stream30" src="CTRL1" dest="EPS" size="100" period="10" deadline="2" rl="2"/>
+    <stream id="Stream31" src="CTRL2" dest="EPS" size="100" period="10" deadline="2" rl="1"/>
+    
+
+    <stream id="Stream32" src="EPS" dest="CTRL1" size="100" period="20" deadline="2" rl="2"/>
+    <stream id="Stream33" src="EPS" dest="CTRL2" size="100" period="20" deadline="2" rl="1"/>
+    <stream id="Stream34" src="EBCM" dest="CTRL1" size="100" period="40" deadline="2" rl="2"/>
+    <stream id="Stream35" src="EBCM" dest="CTRL2" size="100" period="40" deadline="2" rl="1"/>
+    <stream id="Stream36" src="ECM" dest="CTRL1" size="100" period="40" deadline="4" rl="1"/>
+    <stream id="Stream37" src="ECM" dest="CTRL2" size="100" period="40" deadline="4" rl="1"/>
+
+</NetworkDescription>
