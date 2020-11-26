@@ -31,58 +31,58 @@
 
     <!-- Links are directional-->
     <!-- speed = byte/us-->
-    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
-    <link src="FRONT_SVCAM" dest="SW1" speed="1000"/>
-    <link src="REAR_SVCAM" dest="SW1" speed="1000"/>
-    <link src="LEFT_SVCAM" dest="SW1" speed="1000"/>
-    <link src="RIGHT_SVCAM" dest="SW1" speed="1000"/>
+    <link src="FRONT_SVCAM" dest="SW1" speed="12.5"/>
+    <link src="FRONT_SVCAM" dest="SW1" speed="12.5"/>
+    <link src="REAR_SVCAM" dest="SW1" speed="12.5"/>
+    <link src="LEFT_SVCAM" dest="SW1" speed="12.5"/>
+    <link src="RIGHT_SVCAM" dest="SW1" speed="12.5"/>
 
-    <link src="SW1" dest="CTRL1" speed="1000"/>
+    <link src="SW1" dest="CTRL1" speed="12.5"/>
 
-    <link src="RIGHT_REAR_RAD" dest="SW2" speed="1000"/>
-    <link src="LEFT_REAR_RAD" dest="SW2" speed="1000"/>
-    <link src="REAR_CAM" dest="SW2" speed="1000"/>
-    <link src="REAR_RAD" dest="SW2" speed="1000"/>
+    <link src="RIGHT_REAR_RAD" dest="SW2" speed="12.5"/>
+    <link src="LEFT_REAR_RAD" dest="SW2" speed="12.5"/>
+    <link src="REAR_CAM" dest="SW2" speed="12.5"/>
+    <link src="REAR_RAD" dest="SW2" speed="12.5"/>
 
-    <link src="SW2" dest="CTRL1" speed="1000"/>
-    <link src="SW2" dest="CTRL2" speed="1000"/>
+    <link src="SW2" dest="CTRL1" speed="12.5"/>
+    <link src="SW2" dest="CTRL2" speed="12.5"/>
 
-    <link src="CTRL1" dest="SW3" speed="1000"/>
-    <link src="CTRL2" dest="SW3" speed="1000"/>
-    <link src="CTRL1" dest="SW5" speed="1000"/>
-    <link src="CTRL2" dest="SW5" speed="1000"/>
+    <link src="CTRL1" dest="SW3" speed="12.5"/>
+    <link src="CTRL2" dest="SW3" speed="12.5"/>
+    <link src="CTRL1" dest="SW5" speed="12.5"/>
+    <link src="CTRL2" dest="SW5" speed="12.5"/>
 
-    <link src="SW3" dest="ECM" speed="1000"/>
-    <link src="SW3" dest="EBCM" speed="1000"/>
-    <link src="SW3" dest="EPS" speed="1000"/>
+    <link src="SW3" dest="ECM" speed="12.5"/>
+    <link src="SW3" dest="EBCM" speed="12.5"/>
+    <link src="SW3" dest="EPS" speed="12.5"/>
 
-    <link src="EPS" dest="SW6" speed="1000"/>
-    <link src="ECM" dest="SW6" speed="1000"/>
-    <link src="EBCM" dest="SW6" speed="1000"/>
+    <link src="EPS" dest="SW6" speed="12.5"/>
+    <link src="ECM" dest="SW6" speed="12.5"/>
+    <link src="EBCM" dest="SW6" speed="12.5"/>
 
-    <link src="SW6" dest="CTRL2" speed="1000"/>
-    <link src="SW6" dest="CTRL1" speed="1000"/>
+    <link src="SW6" dest="CTRL2" speed="12.5"/>
+    <link src="SW6" dest="CTRL1" speed="12.5"/>
 
-    <link src="SW5" dest="FRONT_CAM" speed="1000"/>
-    <link src="SW5" dest="FRONT_RAD" speed="1000"/>
-    <link src="SW5" dest="REAR_CAM" speed="1000"/>
-    <link src="SW5" dest="REAR_RAD" speed="1000"/>
+    <link src="SW5" dest="FRONT_CAM" speed="12.5"/>
+    <link src="SW5" dest="FRONT_RAD" speed="12.5"/>
+    <link src="SW5" dest="REAR_CAM" speed="12.5"/>
+    <link src="SW5" dest="REAR_RAD" speed="12.5"/>
 
-    <link src="RIGHT_FRONT_RAD" dest="SW4" speed="1000"/>
-    <link src="LEFT_FRONT_RAD" dest="SW4" speed="1000"/>
-    <link src="FRONT_CAM" dest="SW4" speed="1000"/>
-    <link src="FRONT_RAD" dest="SW4" speed="1000"/>
+    <link src="RIGHT_FRONT_RAD" dest="SW4" speed="12.5"/>
+    <link src="LEFT_FRONT_RAD" dest="SW4" speed="12.5"/>
+    <link src="FRONT_CAM" dest="SW4" speed="12.5"/>
+    <link src="FRONT_RAD" dest="SW4" speed="12.5"/>
 
-    <link src="RIGHT_FRONT_RAD" dest="SW7" speed="1000"/>
-    <link src="LEFT_FRONT_RAD" dest="SW7" speed="1000"/>
-    <link src="FRONT_CAM" dest="SW7" speed="1000"/>
-    <link src="FRONT_RAD" dest="SW7" speed="1000"/>
+    <link src="RIGHT_FRONT_RAD" dest="SW7" speed="12.5"/>
+    <link src="LEFT_FRONT_RAD" dest="SW7" speed="12.5"/>
+    <link src="FRONT_CAM" dest="SW7" speed="12.5"/>
+    <link src="FRONT_RAD" dest="SW7" speed="12.5"/>
 
-    <link src="SW4" dest="CTRL1" speed="1000"/>
-    <link src="SW4" dest="CTRL2" speed="1000"/>
+    <link src="SW4" dest="CTRL1" speed="12.5"/>
+    <link src="SW4" dest="CTRL2" speed="12.5"/>
 
-    <link src="SW7" dest="CTRL1" speed="1000"/>
-    <link src="SW7" dest="CTRL2" speed="1000"/>
+    <link src="SW7" dest="CTRL1" speed="12.5"/>
+    <link src="SW7" dest="CTRL2" speed="12.5"/>
 
     <!-- times in us -->
     <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20000" deadline="2000" rl="2"/>

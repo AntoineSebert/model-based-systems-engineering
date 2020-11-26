@@ -85,51 +85,51 @@
     <link src="SW4" dest="CTRL2" speed="12.5"/>
 
     <!-- times in us -->
-    <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20" deadline="2" rl="2"/>
-    <stream id="Stream01" src="FRONT_CAM" dest="CTRL2" size="800" period="20" deadline="2" rl="2"/>
-    <stream id="Stream02" src="FRONT_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream03" src="FRONT_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream04" src="FRONT_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
-    <stream id="Stream05" src="LEFT_FRONT_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream06" src="LEFT_FRONT_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream07" src="RIGHT_FRONT_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream08" src="RIGHT_FRONT_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream09" src="LEFT_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
-    <stream id="Stream10" src="RIGHT_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
-    <stream id="Stream11" src="LEFT_REAR_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="1"/>
-    <stream id="Stream12" src="LEFT_REAR_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="1"/>
-    <stream id="Stream13" src="RIGHT_REAR_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="1"/>
-    <stream id="Stream14" src="RIGHT_REAR_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="1"/>
-    <stream id="Stream15" src="REAR_CAM" dest="CTRL1" size="600" period="40" deadline="4" rl="2"/>
-    <stream id="Stream16" src="REAR_CAM" dest="CTRL2" size="600" period="40" deadline="4" rl="2"/>
-    <stream id="Stream17" src="REAR_RAD" dest="CTRL1" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream18" src="REAR_RAD" dest="CTRL2" size="400" period="40" deadline="4" rl="2"/>
-    <stream id="Stream19" src="REAR_SVCAM" dest="CTRL1" size="1500" period="50" deadline="10" rl="1"/>
+    <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20000" deadline="2000" rl="2"/>
+    <stream id="Stream01" src="FRONT_CAM" dest="CTRL2" size="800" period="20000" deadline="2000" rl="2"/>
+    <stream id="Stream02" src="FRONT_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream03" src="FRONT_RAD" dest="CTRL2" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream04" src="FRONT_SVCAM" dest="CTRL1" size="1500" period="50000" deadline="10000" rl="1"/>
+    <stream id="Stream05" src="LEFT_FRONT_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream06" src="LEFT_FRONT_RAD" dest="CTRL2" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream07" src="RIGHT_FRONT_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream08" src="RIGHT_FRONT_RAD" dest="CTRL2" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream09" src="LEFT_SVCAM" dest="CTRL1" size="1500" period="50000" deadline="10000" rl="1"/>
+    <stream id="Stream10" src="RIGHT_SVCAM" dest="CTRL1" size="1500" period="50000" deadline="10000" rl="1"/>
+    <stream id="Stream11" src="LEFT_REAR_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="1"/>
+    <stream id="Stream12" src="LEFT_REAR_RAD" dest="CTRL2" size="400" period="40000" deadline="4000" rl="1"/>
+    <stream id="Stream13" src="RIGHT_REAR_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="1"/>
+    <stream id="Stream14" src="RIGHT_REAR_RAD" dest="CTRL2" size="400" period="40000" deadline="4000" rl="1"/>
+    <stream id="Stream15" src="REAR_CAM" dest="CTRL1" size="600" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream16" src="REAR_CAM" dest="CTRL2" size="600" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream17" src="REAR_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream18" src="REAR_RAD" dest="CTRL2" size="400" period="40000" deadline="4000" rl="2"/>
+    <stream id="Stream19" src="REAR_SVCAM" dest="CTRL1" size="1500" period="50000" deadline="10000" rl="1"/>
 
 
-    <stream id="Stream20" src="CTRL1" dest="FRONT_CAM" size="100" period="20" deadline="4" rl="2"/>
-    <stream id="Stream21" src="CTRL1" dest="FRONT_RAD" size="100" period="20" deadline="4" rl="2"/>
-    <stream id="Stream22" src="CTRL1" dest="REAR_CAM" size="100" period="20" deadline="4" rl="1"/>
-    <stream id="Stream23" src="CTRL1" dest="REAR_RAD" size="100" period="20" deadline="4" rl="1"/>
+    <stream id="Stream20" src="CTRL1" dest="FRONT_CAM" size="100" period="20000" deadline="4000" rl="2"/>
+    <stream id="Stream21" src="CTRL1" dest="FRONT_RAD" size="100" period="20000" deadline="4000" rl="2"/>
+    <stream id="Stream22" src="CTRL1" dest="REAR_CAM" size="100" period="20000" deadline="4000" rl="1"/>
+    <stream id="Stream23" src="CTRL1" dest="REAR_RAD" size="100" period="20000" deadline="4000" rl="1"/>
 
-    <stream id="Stream24" src="CTRL2" dest="FRONT_CAM" size="100" period="20" deadline="4" rl="1"/>
-    <stream id="Stream25" src="CTRL2" dest="FRONT_RAD" size="100" period="20" deadline="4" rl="1"/>
+    <stream id="Stream24" src="CTRL2" dest="FRONT_CAM" size="100" period="20000" deadline="4000" rl="1"/>
+    <stream id="Stream25" src="CTRL2" dest="FRONT_RAD" size="100" period="20000" deadline="4000" rl="1"/>
     
-    <stream id="Stream26" src="CTRL1" dest="ECM" size="100" period="40" deadline="4" rl="1"/>
-    <stream id="Stream27" src="CTRL2" dest="ECM" size="100" period="40" deadline="4" rl="1"/>
+    <stream id="Stream26" src="CTRL1" dest="ECM" size="100" period="40000" deadline="4000" rl="1"/>
+    <stream id="Stream27" src="CTRL2" dest="ECM" size="100" period="40000" deadline="4000" rl="1"/>
     
-    <stream id="Stream28" src="CTRL1" dest="EBCM" size="100" period="40" deadline="2" rl="2"/>
-    <stream id="Stream29" src="CTRL2" dest="EBCM" size="100" period="40" deadline="2" rl="1"/>
+    <stream id="Stream28" src="CTRL1" dest="EBCM" size="100" period="40000" deadline="2000" rl="2"/>
+    <stream id="Stream29" src="CTRL2" dest="EBCM" size="100" period="40000" deadline="2000" rl="1"/>
     
-    <stream id="Stream30" src="CTRL1" dest="EPS" size="100" period="10" deadline="2" rl="2"/>
-    <stream id="Stream31" src="CTRL2" dest="EPS" size="100" period="10" deadline="2" rl="1"/>
+    <stream id="Stream30" src="CTRL1" dest="EPS" size="100" period="10000" deadline="2000" rl="2"/>
+    <stream id="Stream31" src="CTRL2" dest="EPS" size="100" period="10000" deadline="2000" rl="1"/>
     
 
-    <stream id="Stream32" src="EPS" dest="CTRL1" size="100" period="20" deadline="2" rl="2"/>
-    <stream id="Stream33" src="EPS" dest="CTRL2" size="100" period="20" deadline="2" rl="1"/>
-    <stream id="Stream34" src="EBCM" dest="CTRL1" size="100" period="40" deadline="2" rl="2"/>
-    <stream id="Stream35" src="EBCM" dest="CTRL2" size="100" period="40" deadline="2" rl="1"/>
-    <stream id="Stream36" src="ECM" dest="CTRL1" size="100" period="40" deadline="4" rl="1"/>
-    <stream id="Stream37" src="ECM" dest="CTRL2" size="100" period="40" deadline="4" rl="1"/>
+    <stream id="Stream32" src="EPS" dest="CTRL1" size="100" period="20000" deadline="2000" rl="2"/>
+    <stream id="Stream33" src="EPS" dest="CTRL2" size="100" period="20000" deadline="2000" rl="1"/>
+    <stream id="Stream34" src="EBCM" dest="CTRL1" size="100" period="40000" deadline="2000" rl="2"/>
+    <stream id="Stream35" src="EBCM" dest="CTRL2" size="100" period="40000" deadline="2000" rl="1"/>
+    <stream id="Stream36" src="ECM" dest="CTRL1" size="100" period="40000" deadline="4000" rl="1"/>
+    <stream id="Stream37" src="ECM" dest="CTRL2" size="100" period="40000" deadline="4000" rl="1"/>
 
 </NetworkDescription>

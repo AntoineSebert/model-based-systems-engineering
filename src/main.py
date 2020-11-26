@@ -64,9 +64,11 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams = build(args.file, args.display_graph)
+	network, streams, cost = build(args.file, args.display_graph)
 
 	results = simulate(network, streams, args.time, args.stop)
+	print("Cost of network: ", cost)
+	print()
 	print(results)
 	# to_file(results, args.file)
 

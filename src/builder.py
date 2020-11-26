@@ -13,7 +13,8 @@ from numpy import sqrt  # type: ignore
 from search import findStreamSolution
 
 
-def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
+def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
+	monetaryCost = 0
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Parameters
@@ -45,6 +46,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 			network.add_node(EndSystem(device.get("name")))
 		elif device_type == "Switch":
 			network.add_node(Switch(device.get("name")))
+			monetaryCost += 2
 
 	# Connect devices by links
 	for link in root.iter("link"):
@@ -70,6 +72,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
 		network.add_edge(src, intermediateNode, speed=(float(link.get('speed'))))  # src to intermediate node
 		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
+		monetaryCost += 1
 
 	print("Number of network devices: {}".format(len(network.nodes)))
 	print(network.nodes)
@@ -120,4 +123,4 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 
 	allStreamRoutes.printSolution()
 
-	return network, streams
+	return network, streams, monetaryCost

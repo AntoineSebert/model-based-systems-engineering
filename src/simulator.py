@@ -47,8 +47,17 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 		iteration += 1
 
 	print("Missed a total of {} deadlines when running for {} milliseconds".format(totalMisses, iteration*timeResolution/1000.0))
+
+	wctt_sum = 0
+	wctts = []
+
 	for stream in streams:
 		print("Stream{} WCTT: {} microseconds".format(stream.id, stream.WCTT))
+		wctt_sum += stream.WCTT
+		wctts.append(stream.WCTT)
+	print()
+	print("Average WCTT: {} microseconds".format(round(wctt_sum / len(streams), 2)))
+	print("Worst transmission time: {} microseconds".format(max(wctts)))
 	logger.info("done.")
 
 	return Results(network, streams, {})
