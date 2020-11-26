@@ -1,8 +1,6 @@
 import logging
 
-from logic import Results, Stream
-
-from model import Switch, EndSystem
+from model import Switch, EndSystem, Results, Stream
 
 from networkx import DiGraph  # type: ignore
 
