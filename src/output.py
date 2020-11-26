@@ -3,7 +3,7 @@ from logging import getLogger
 from pathlib import Path
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
-from logic import Results
+from model import Results
 
 
 def _add_streams(network_desc: Element, results: Results) -> None:
