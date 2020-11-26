@@ -75,7 +75,7 @@
     <link src="SW4" dest="CTRL1" speed="12.5"/>
     <link src="SW4" dest="CTRL2" speed="12.5"/>
 
-    <!-- times in us -->
+    <!-- times in ms -->
     <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20000" deadline="2000" rl="2000"/>
     <stream id="Stream01" src="FRONT_CAM" dest="CTRL2" size="800" period="20000" deadline="2000" rl="2000"/>
     <stream id="Stream02" src="FRONT_RAD" dest="CTRL1" size="400" period="40000" deadline="4000" rl="2000"/>
