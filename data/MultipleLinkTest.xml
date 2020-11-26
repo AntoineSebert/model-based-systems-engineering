@@ -14,6 +14,6 @@
     <link src="SW1" dest="CTRL1" speed="12.5"/>
     <link src="SW1" dest="CTRL1" speed="12.5"/>
 
-    <!-- times in ms -->
+    <!-- times in us -->
     <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20000" deadline="10000" rl="2"/>
 </NetworkDescription>

@@ -21,7 +21,7 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 		misses |= device.receive(network, iteration, timeResolution)
 
 	for stream in misses:
-		logger.warning(f"Missed deadline for {stream.id} at {iteration}")
+		logger.warning(f"Missed deadline for {stream.id} at time {iteration*timeResolution}")
 
 	return misses
 
@@ -33,12 +33,12 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	iteration: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()
-
+	totalMisses = 0
 	while loop_cond(iteration, time_limit):
-		print("Time({})".format(iteration))
+		# print("Time({})".format(iteration))
 
 		misses = _events(logger, iteration, timeResolution, network, streams)
-
+		totalMisses += len(misses)
 		if len(misses) != 0 and stop_on_miss:
 			break
 
@@ -46,7 +46,9 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
 		iteration += 1
 
-	print("Done at Time({})".format(iteration))
+	print("Missed a total of {} deadlines when running for {} milliseconds".format(totalMisses, iteration*timeResolution/1000.0))
+	for stream in streams:
+		print("Stream{} WCTT: {} microseconds".format(stream.id, stream.WCTT))
 	logger.info("done.")
 
 	return Results(network, streams, {})

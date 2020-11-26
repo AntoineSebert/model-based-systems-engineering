@@ -83,6 +83,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		draw(network, pos=pos, connectionstyle='arc3, rad = 0.1')
 		pyplot.show()
 
+	# Todo: XML attributes should be loaded as floats/integers
 	streams = {Stream(
 		stream.get("id"),
 		#[node for node in network.nodes if node.name == stream.get("src")][0],

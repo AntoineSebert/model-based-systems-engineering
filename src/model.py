@@ -193,9 +193,14 @@ class EndSystem(Device):
             if self.name != framelet.route.links[-1].dest:
                 self.egress.put(framelet)  # Queue instead
             else: # Check if deadline is passed for frame
-                print("Received frame")
-                if time*timeResolution > framelet.releaseTime + framelet.stream.deadline:
-                    print("Deadline missed")
+                # print("Received frame")
+                transmissionTime = time*timeResolution - framelet.releaseTime
+                if framelet.stream.WCTT < (transmissionTime):
+                    framelet.stream.WCTT = transmissionTime
+                if time*timeResolution > framelet.releaseTime + int(framelet.stream.deadline):
+                    int(framelet.stream.deadline)
+                    time * timeResolution
+                    # print("Deadline missed")
                     misses.add(framelet.stream)
         return misses
 
@@ -468,6 +473,7 @@ class Stream(Sequence):
     rl: int
     streamSolution: StreamSolution
     instance: int = 0
+    WCTT: int = 0 # Worst-case transmission time detected while simulating
 
 
     def __hash__(self: Stream) -> int:
