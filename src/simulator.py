@@ -18,15 +18,8 @@ def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[St
 	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
 		device.emit(time, network)
 
-	# For all switches, receive framelets on ingress and add to egress queue
-	#for device in network.nodes:
-		#misses |= device.receive(time, network)
-
-	#for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
-		#misses |= switch.receive(time)
-
-	# for stream in streams:
-	# 	misses |= stream.src.receive(time)
+	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
+		misses |= device.receive(time, network)
 
 	for stream in misses:
 		logger.warning(f"Missed deadline for {stream.id} at {time}")

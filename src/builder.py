@@ -93,7 +93,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		stream.get("dest"),
 		stream.get("size"),
 		stream.get("period"),
-		stream.get("deadline"),
+		int(stream.get("deadline")),
 		stream.get("rl"),
 		set(),
 	) for stream in root.iter("stream")}

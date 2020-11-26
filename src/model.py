@@ -31,25 +31,39 @@ class Switch(Device):
     speed: float = 1.0
 
     def emit(self: Switch, time: int, network: DiGraph) -> None:
-        pass
+        for i in range(len(self.egress)):
+            # print(len(self.egress))
+            framelet = self.egress.pop()
+            nextStep = next(link for link in framelet.route.links if link.src == self.name)
+            nextStep.dest = nextStep.dest.split('$')[0]
+            receiver = next(device for device in network._node if device == Device(nextStep.dest))
+            receiver.ingress.append(framelet)
 
     def receive(self: Switch, time: int, network: DiGraph) -> set['Stream']:
-        return
-        misses: set['Stream'] = set()
-        temp: PriorityQueue = PriorityQueue()
-
-        while not self.queue.empty():
-            priority, framelet = self.queue.get()
-            logging.info(f"Switch {self.name} received framelet from {framelet.to_string()}")
-
-            if time < framelet.instance.local_deadline:
-                misses.add(framelet.instance.stream)
-
-            self.temp.put((priority, framelet))
-
-        self.queue = temp
-
+        misses: set['Framelet'] = set()
+        # todo: again careful of order here. Framelets are added to egress in a LIFO manner...
+        for i in range(len(self.ingress)):
+            framelet = self.ingress.pop()
+            logging.info(f"EndSystem {self.name} received framelet from")
+            if time > framelet.releaseTime + framelet.stream.deadline:
+                misses.add(framelet)
+            self.egress.append(framelet)
         return misses
+
+        # temp: PriorityQueue = PriorityQueue()
+        #
+        # while not self.queue.empty():
+        #     priority, framelet = self.queue.get()
+        #     logging.info(f"Switch {self.name} received framelet from {framelet.to_string()}")
+        #
+        #     if time < framelet.instance.local_deadline:
+        #         misses.add(framelet.instance.stream)
+        #
+        #     self.temp.put((priority, framelet))
+        #
+        # self.queue = temp
+        #
+        # return misses
 
 
 @dataclass(eq=False)
@@ -70,10 +84,10 @@ class EndSystem(Device):
                 while (size > 0):
                     index = index + 1
                     if (size < 64):
-                        self.egress.append(Framelet(index, stream.instance, size, route))
+                        self.egress.append(Framelet(index, stream.instance, size, route, stream, time))
                         size = size - 64
                     else:
-                        self.egress.append(Framelet(index, stream.instance, 64, route))
+                        self.egress.append(Framelet(index, stream.instance, 64, route, stream, time))
                         size = size - 64
             stream.instance += 1
                     
@@ -88,24 +102,17 @@ class EndSystem(Device):
             nextStep.dest = nextStep.dest.split('$')[0]
             receiver = next(device for device in network._node if device == Device(nextStep.dest))
             receiver.ingress.append(framelet)
-            # print("Ingress size: ", len(receiver.ingress))
-
-            device = next(device for device in network._node if device == EndSystem('FRONT_CAM'))
 
         logging.info(f"EndSystem {self.name} emitted framelet")
 
 
     def receive(self: EndSystem, time: int, network: DiGraph) -> set['Stream']:
-        pass
-        misses: set['Stream'] = set()
-
-        for framelet in self.ingress:
+        misses: set['Framelet'] = set()
+        for i in range(len(self.ingress)):
+            framelet = self.ingress.pop()
             logging.info(f"EndSystem {self.name} received framelet from")
-
-        # if time < framelet.instance.local_deadline:
-       #	misses.add(framelet.instance.stream)
-
-        self.ingress.clear()
+            if time > framelet.releaseTime + framelet.stream.deadline:
+                misses.add(framelet)
 
         return misses
 

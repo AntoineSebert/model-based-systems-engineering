@@ -127,6 +127,8 @@ class Framelet:
 	instance: int
 	size: int
 	route: Route
+	stream: Stream
+	releaseTime: int
 
 	def __eq__(self: Framelet, other: object) -> bool:
 		if isinstance(other, Framelet):
