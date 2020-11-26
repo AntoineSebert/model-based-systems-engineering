@@ -7,7 +7,7 @@ from model import Switch, EndSystem
 from networkx import DiGraph  # type: ignore
 
 
-def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream]) -> set[Stream]:
+def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream]) -> set['Framelet']:
 	misses = set()
 
 	# Check if new framelets should be added to EndSystem queue for emission
@@ -31,7 +31,7 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 # resources in OneDrive slides
 def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
 	logger = logging.getLogger()
-	timeResolution = 10 # Number of microseconds simulated in a single iteration
+	timeResolution = 5 # Number of microseconds simulated in a single iteration
 	iteration: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()

@@ -133,13 +133,10 @@ class EndSystem(Device):
         # First iteration
         index = 0
         for stream in filter(lambda n: not (iteration * timeResolution % int(n.period)), self.streams):
-            # print("Enqueing stream: ", stream.id, "\nwith period: ", stream.period)
             for route in stream.streamSolution.routes:
-                # print("Enqueuing redundant framelets for route:")
-                # print(route)
                 size = int(stream.size)
-                index = 1
-                self.egress.put(Framelet(index, stream.instance, size, route, stream, iteration))
+                index = index + 1
+                self.egress.put(Framelet(index, stream.instance, size, route, stream, iteration*timeResolution))
 
             stream.instance += 1
                     
@@ -186,16 +183,18 @@ class EndSystem(Device):
         logging.info(f"EndSystem {self.name} emitted framelet")
 
 
-    def receive(self: EndSystem, network: DiGraph, time: int, timeResolution: int) -> set['Stream']:
+    def receive(self: EndSystem, network: DiGraph, time: int, timeResolution: int) -> set['Framelet']:
         misses: set['Framelet'] = set()
         for i in range(self.ingress.qsize()):
             framelet = self.ingress.get()
             logging.info(f"EndSystem {self.name} received framelet from")
-            #if time > framelet.releaseTime + framelet.stream.deadline:
-                #misses.add(framelet)
             if self.name != framelet.route.links[-1].dest:
                 self.egress.put(framelet)  # Queue instead
-
+            else: # Check if deadline is passed for frame
+                print("Received frame")
+                if time*timeResolution > framelet.releaseTime + framelet.stream.deadline:
+                    print("Deadline missed")
+                    misses.add(framelet.stream)
         return misses
 
 

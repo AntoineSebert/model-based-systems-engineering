@@ -6,14 +6,14 @@
 
     <!-- Links are directional-->
     <!-- speed = byte/us-->
-    <link src="FRONT_CAM" dest="SW1" speed="1000"/>
-    <link src="FRONT_CAM" dest="SW1" speed="2000"/>
-    <link src="FRONT_CAM" dest="SW1" speed="3000"/>
+    <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
+    <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
+    <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
 
-    <link src="SW1" dest="CTRL1" speed="1000"/>
-    <link src="SW1" dest="CTRL1" speed="2000"/>
-    <link src="SW1" dest="CTRL1" speed="3000"/>
+    <link src="SW1" dest="CTRL1" speed="12.5"/>
+    <link src="SW1" dest="CTRL1" speed="12.5"/>
+    <link src="SW1" dest="CTRL1" speed="12.5"/>
 
     <!-- times in us -->
-    <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20" deadline="2" rl="2"/>
+    <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20000" deadline="10000" rl="2"/>
 </NetworkDescription>
