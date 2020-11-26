@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass, field
-from queue import PriorityQueue
+from queue import PriorityQueue, Queue
 from networkx import DiGraph
 from logic import Stream, Framelet, Route, Link, Solution, StreamSolution
 from typing import List, Tuple
@@ -12,8 +12,10 @@ from copy import deepcopy
 @dataclass
 class Device:
     name: str
-    ingress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
-    egress: list[Framelet] = field(default_factory=list)
+    ingress: Queue[Framelet] = field(default_factory=Queue)
+    egress: Queue[Framelet] = field(default_factory=Queue)
+    #ingress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
+    #egress: list[Framelet] = field(default_factory=list)
 
     def __hash__(self):
         # print(hash(self.name))
@@ -53,10 +55,10 @@ class Switch(Device):
         inIteration = 0
         # Framelets(now Frames) from the same stream are not distinguished. Have the same ID
         while (inIteration <= iterationTime):
-            if not self.egress and self.currentFrame is None:
+            if self.egress.empty() and self.currentFrame is None:
                 break
             if (self.remainingSize <= 0 or self.currentFrame is None):
-                self.currentFrame = self.egress.pop()
+                self.currentFrame = self.egress.get()
                 self.remainingSize = self.currentFrame.size
                 nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
                 self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
@@ -76,7 +78,7 @@ class Switch(Device):
 
             if self.remainingSize <= 0:
                 # print("Frame delivered")
-                self.currentReceiver.ingress.append(self.currentFrame)
+                self.currentReceiver.ingress.put(self.currentFrame)
                 self.currentFrame = None
             # print("\n")
             inIteration += (float(sendable) / self.currentSpeed)
@@ -93,12 +95,12 @@ class Switch(Device):
     def receive(self: Switch, network: DiGraph, time: int, timeResolution: int) -> set['Stream']:
         misses: set['Framelet'] = set()
         # todo: again careful of order here. Framelets are added to egress in a LIFO manner...
-        for i in range(len(self.ingress)):
-            framelet = self.ingress.pop()
+        for i in range(self.ingress.qsize()):
+            framelet = self.ingress.get()
             logging.info(f"Switch {self.name} received framelet")
             #if time > framelet.releaseTime + framelet.stream.deadline:
                 #misses.add(framelet)
-            self.egress.append(framelet)    # Queue instead
+            self.egress.put(framelet)    # Queue instead
         return misses
 
         # temp: PriorityQueue = PriorityQueue()
@@ -137,17 +139,8 @@ class EndSystem(Device):
                 # print(route)
                 size = int(stream.size)
                 index = 1
-                self.egress.append(Framelet(index, stream.instance, size, route, stream, iteration))
+                self.egress.put(Framelet(index, stream.instance, size, route, stream, iteration))
 
-                #print("index", index, " size: ", size)
-                # while (size > 0):
-                #     index = index + 1
-                #     if (size < 64):
-                #         self.egress.append(Framelet(index, stream.instance, size, route, stream, time))
-                #         size = size - 64
-                #     else:
-                #         self.egress.append(Framelet(index, stream.instance, 64, route, stream, time))
-                #         size = size - 64
             stream.instance += 1
                     
 
@@ -155,24 +148,14 @@ class EndSystem(Device):
         # todo: check deadline?
         # todo: Add time check. emit doesn't care what link speeds are. Emits all framelets on each iteration.
 
-        '''
-        for i in range(len(self.egress)):
-            # print(len(self.egress))
-            framelet = self.egress.pop()
-            nextStep = next(link for link in framelet.route.links if link.src == self.name)
-            nextStep.dest = nextStep.dest.split('$')[0]
-            receiver = next(device for device in network._node if device == Device(nextStep.dest))
-            receiver.ingress.append(framelet)
-        '''
-
         iterationTime = timeResolution # How far a single simulator iterations spans in time in microseconds
         inIteration = 0
         # Framelets(now Frames) from the same stream are not distinguished. Have the same ID
         while (inIteration <= iterationTime):
-            if not self.egress and self.currentFrame is None:
+            if self.egress.empty() and self.currentFrame is None:
                 break
             if (self.remainingSize <= 0 or self.currentFrame is None):
-                self.currentFrame = self.egress.pop()
+                self.currentFrame = self.egress.get()
                 self.remainingSize = self.currentFrame.size
                 nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
                 self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
@@ -192,7 +175,7 @@ class EndSystem(Device):
             
             if self.remainingSize <= 0:
                 # print("Frame delivered")
-                self.currentReceiver.ingress.append(self.currentFrame)
+                self.currentReceiver.ingress.put(self.currentFrame)
                 self.currentFrame = None
             # print("\n")
             inIteration += (float(sendable)/self.currentSpeed)
@@ -202,8 +185,8 @@ class EndSystem(Device):
 
     def receive(self: EndSystem, network: DiGraph, time: int, timeResolution: int) -> set['Stream']:
         misses: set['Framelet'] = set()
-        for i in range(len(self.ingress)):
-            framelet = self.ingress.pop()
+        for i in range(self.ingress.qsize()):
+            framelet = self.ingress.get()
             logging.info(f"EndSystem {self.name} received framelet from")
             #if time > framelet.releaseTime + framelet.stream.deadline:
                 #misses.add(framelet)

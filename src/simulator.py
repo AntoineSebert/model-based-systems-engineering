@@ -14,9 +14,10 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 	for endSystem in filter(lambda n: isinstance(n, EndSystem), network.nodes):
 		endSystem.enqueueStreams(network, iteration, timeResolution)
 
-	# Go through all end in network and emit from egress queue
+	# Go through all endsystem and switches in network and emit from egress queue
 	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
 		device.emit(network, timeResolution)
+
 
 	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
 		misses |= device.receive(network, iteration, timeResolution)
