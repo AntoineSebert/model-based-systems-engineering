@@ -2,11 +2,9 @@ from logging import getLogger
 from pathlib import Path
 from xml.etree.ElementTree import dump, indent, parse
 
-from logic import Stream
-
 from matplotlib import pyplot  # type: ignore
 
-from model import Device, EndSystem, Switch, InputPort, Solution
+from model import Device, EndSystem, Switch, InputPort, Solution, Stream
 
 from networkx import DiGraph, DiGraph, draw, spring_layout  # type: ignore
 
@@ -113,7 +111,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 		endsys = next(node for node in network.nodes if stream.src == node.name)
 		endsys.streams.append(stream)
 	[print(node.name, ":\n", node.streams, "\n\n") for node in network.nodes if isinstance(node,EndSystem)]
-		
+
 
 	# Perform k-shortest search for all streams
 
