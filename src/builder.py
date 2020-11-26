@@ -6,7 +6,7 @@ from logic import Stream
 
 from matplotlib import pyplot  # type: ignore
 
-from model import EndSystem, Switch, InputPort, Solution
+from model import Device, EndSystem, Switch, InputPort, Solution
 
 from networkx import DiGraph, DiGraph, draw, spring_layout  # type: ignore
 
@@ -41,6 +41,7 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 	network = DiGraph()
 
 	# Find devices
+	print("Test")
 	for device in root.iter("device"):
 		if (device_type := device.get("type")) == "EndSystem":
 			network.add_node(EndSystem(device.get("name")))
@@ -48,7 +49,6 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 			network.add_node(Switch(device.get("name")))
 
 	# Connect devices by links
-
 	for link in root.iter("link"):
 		print("Adding a link from {0} to {1}".format(link.get("src"), link.get("dest")))
 		# This is not working
@@ -67,9 +67,9 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream]]:
 			dest = EndSystem(link.get("dest"))
 
 		counter = 1
-		while network.has_node(InputPort(dest.name + "_PORT_" + str(counter))):
+		while network.has_node(InputPort(dest.name + "$PORT" + str(counter))):
 			counter += 1
-		intermediateNode = InputPort(dest.name + "_PORT_" + str(counter))
+		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
 		network.add_edge(src, intermediateNode, speed=(1.0 / float(link.get('speed'))))  # src to intermediate node
 		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
 

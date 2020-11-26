@@ -124,7 +124,7 @@ class Framelet:
 	"""
 
 	id: int
-	instance: StreamInstance
+	instance: int
 	size: int
 	route: Route
 
@@ -264,7 +264,9 @@ class Stream(Sequence):
 	period: int
 	deadline: int
 	rl: int
-	instances: list[StreamInstance] = field(default_factory=list)
+	streamSolution: StreamSolution
+	instance: int = 0
+
 
 	def __hash__(self: Stream) -> int:
 		return hash(self.id)

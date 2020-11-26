@@ -66,7 +66,7 @@ def main() -> int:
 
 	network, streams = build(args.file, args.display_graph)
 
-	# results = simulate(network, streams, args.time, args.stop)
+	results = simulate(network, streams, args.time, args.stop)
 
 	# to_file(results, args.file)
 

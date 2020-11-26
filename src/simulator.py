@@ -15,12 +15,12 @@ def _events(logger, time: int, network: DiGraph, streams: set[Stream]) -> set[St
 		endSystem.enqueueStreams(network, time)
 
 	# Go through all end in network and emit from egress queue
-	for device in network.nodes:
+	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
 		device.emit(time, network)
 
 	# For all switches, receive framelets on ingress and add to egress queue
-	for device in network.nodes:
-		misses |= device.receive(time, network)
+	#for device in network.nodes:
+		#misses |= device.receive(time, network)
 
 	#for switch in filter(lambda n: isinstance(n, Switch), network.nodes):
 		#misses |= switch.receive(time)
@@ -43,7 +43,8 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	misses: set[Stream] = set()
 
 	while loop_cond(time, time_limit):
-		#print(time)
+		if not time % 500:
+			print("Time({})".format(time))
 
 		misses = _events(logger, time, network, streams)
 
