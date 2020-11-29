@@ -1,20 +1,60 @@
+from itertools import islice
 from logging import getLogger
 from pathlib import Path
-from xml.etree.ElementTree import dump, indent, parse
+from xml.etree.ElementTree import Element, dump, indent, parse
 
-from matplotlib import pyplot  # type: ignore
+from model import EndSystem, InputPort, Link, Route, Stream, Switch
 
-from model import Device, EndSystem, Switch, InputPort, Solution, Stream
+from networkx import DiGraph  # type: ignore
 
-from networkx import DiGraph, DiGraph, draw, spring_layout  # type: ignore
-
-from numpy import sqrt  # type: ignore
-
-from search import findStreamSolution
+from networkx.algorithms.simple_paths import shortest_simple_paths  # type: ignore
 
 
-def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
-	monetaryCost = 0
+def get_devices(root: Element, network: DiGraph) -> DiGraph:
+	network.add_nodes_from(
+		EndSystem(device.get("name"))
+		if device.get("type") == "EndSystem" else Switch(device.get("name")) for device in root.iter("device")
+	)
+
+	return network
+
+
+def create_links(root: Element, network: DiGraph) -> DiGraph:
+	for link in root.iter("link"):
+		src = next(node for node in network.nodes if node.name == link.get("src"))
+		dest = next(node for node in network.nodes if node.name == link.get("dest"))
+
+		network.add_edge(src, dest, speed=float(link.get('speed')))
+
+		# what is this ?
+		counter = 1
+		while network.has_node(InputPort(dest.name + "$PORT" + str(counter))):
+			counter += 1
+		"""
+		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
+		network.add_edge(src, intermediateNode, speed=float(link.get('speed')))  # src to intermediate node
+		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
+		"""
+
+	return network
+
+
+def findStreamSolution(network: DiGraph, stream: Stream) -> list[Route]:
+	paths = list(islice(shortest_simple_paths(network, stream.src, stream.dest, weight='speed'), stream.rl))
+
+	return [Route(i, [Link(path[ii], path[ii + 1]) for ii in range(len(path) - 1)]) for i, path in enumerate(paths)]
+
+
+def create_streams(root: Element, network: DiGraph) -> set[Stream]:
+	streams = {Stream.from_elementtree(stream, network) for stream in root.iter("stream")}
+
+	for stream in streams:
+		stream.routes = findStreamSolution(network, stream)
+
+	return streams
+
+
+def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Parameters
@@ -29,7 +69,6 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 	"""
 
 	logger = getLogger()
-
 	logger.info(f"Importing the model from '{file}'...")
 
 	root = parse(file).getroot()
@@ -37,90 +76,9 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 	indent(root, space="\t")
 	dump(root)
 
-	network = DiGraph()
-
-	# Find devices
-	print("Test")
-	for device in root.iter("device"):
-		if (device_type := device.get("type")) == "EndSystem":
-			network.add_node(EndSystem(device.get("name")))
-		elif device_type == "Switch":
-			network.add_node(Switch(device.get("name")))
-			monetaryCost += 2
-
-	# Connect devices by links
-	for link in root.iter("link"):
-		print("Adding a link from {0} to {1}".format(link.get("src"), link.get("dest")))
-		# This is not working
-		src = None
-		dest = None
-
-		# Determine src type
-		if str(link.get("src")).startswith("SW"):
-			src = Switch(link.get("src"))
-		else:
-			src = EndSystem(link.get("src"))
-		# Determine destination type
-		if str(link.get("dest")).startswith("SW"):
-			dest = Switch(link.get("dest"))
-		else:
-			dest = EndSystem(link.get("dest"))
-
-		counter = 1
-		while network.has_node(InputPort(dest.name + "$PORT" + str(counter))):
-			counter += 1
-		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
-		network.add_edge(src, intermediateNode, speed=(float(link.get('speed'))))  # src to intermediate node
-		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
-		monetaryCost += 1
-
-	print("Number of network devices: {}".format(len(network.nodes)))
-	print(network.nodes)
-	edges = network.edges(data=True)
-	print(edges)
-
-	if display_graph:
-		pos = spring_layout(network, k=3 / sqrt(len(network.nodes())), iterations=50)
-		pyplot.subplots(figsize=(30, 30))
-		pyplot.subplot(121)
-		draw(network, pos=pos, connectionstyle='arc3, rad = 0.1')
-		pyplot.show()
-
-	# Todo: XML attributes should be loaded as floats/integers
-	streams = {Stream(
-		stream.get("id"),
-		#[node for node in network.nodes if node.name == stream.get("src")][0],
-		#[node for node in network.nodes if node.name == stream.get("dest")][0],
-		stream.get("src"),
-		stream.get("dest"),
-		stream.get("size"),
-		stream.get("period"),
-		int(stream.get("deadline")),
-		stream.get("rl"),
-		set(),
-	) for stream in root.iter("stream")}
-
-	allStreamRoutes = Solution([])
-	for stream in streams:
-		streamSolution = findStreamSolution(network, stream)
-		print("test")
-		print(streamSolution)
-		stream.streamSolution = streamSolution
-
-		# --- Only for debugging---
-		allStreamRoutes.streamSolutions.append(streamSolution)
-		# -------------------------
-
-	for stream in streams:
-		endsys = next(node for node in network.nodes if stream.src == node.name)
-		endsys.streams.append(stream)
-	[print(node.name, ":\n", node.streams, "\n\n") for node in network.nodes if isinstance(node,EndSystem)]
-
-
-	# Perform k-shortest search for all streams
+	network = create_links(root, get_devices(root, DiGraph()))
+	streams = create_streams(root, network)
 
 	logger.info("done.")
 
-	allStreamRoutes.printSolution()
-
-	return network, streams, monetaryCost
+	return network, streams

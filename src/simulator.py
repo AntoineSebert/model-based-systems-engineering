@@ -9,15 +9,14 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 	misses = set()
 
 	# Check if new framelets should be added to EndSystem queue for emission
-	for endSystem in filter(lambda n: isinstance(n, EndSystem), network.nodes):
-		endSystem.enqueueStreams(network, iteration, timeResolution)
+	for stream in streams:
+		stream.src.enqueueStreams(network, iteration, timeResolution, stream)
 
 	# Go through all endsystem and switches in network and emit from egress queue
-	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
+	for device in network.nodes:
 		device.emit(network, timeResolution)
 
-
-	for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
+	for device in network.nodes:
 		misses |= device.receive(network, iteration, timeResolution)
 
 	for stream in misses:
@@ -34,11 +33,11 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()
 	totalMisses = 0
-	while loop_cond(iteration, time_limit):
-		# print("Time({})".format(iteration))
 
+	while loop_cond(iteration, time_limit):
 		misses = _events(logger, iteration, timeResolution, network, streams)
 		totalMisses += len(misses)
+
 		if len(misses) != 0 and stop_on_miss:
 			break
 
