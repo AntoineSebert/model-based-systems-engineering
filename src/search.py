@@ -1,17 +1,6 @@
-from networkx.algorithms.simple_paths import all_simple_paths as ap
-from networkx.algorithms.simple_paths import shortest_simple_paths as ssp
 from networkx.algorithms.connectivity.disjoint_paths import node_disjoint_paths
 
-
 from model import StreamSolution, Route, Link, Device, Switch, EndSystem
-
-
-def search_all(network, src, dest):
-    return ap(network, src, dest)
-
-
-def k_shortest(network, src, dest):
-    return ssp(network, src, dest, weight='speed')
 
 
 def findRoutes(pathGenerator, k):
