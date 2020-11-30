@@ -63,12 +63,12 @@ class Switch(Device):
             if (self.remainingSize <= 0 or self.currentFrame is None):
                 self.currentFrame = self.egress_main.get()
                 self.remainingSize = self.currentFrame.size
-                nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
+                nextStep = next(link for link in self.currentFrame.route.links if link.src == self.name)
                 self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
+                dest = nextStep.dest
                 if '$' in nextStep.dest:
-                    nextStep.dest = next(
-                        link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
-                self.currentReceiver = next(device for device in network._node if device == Device(nextStep.dest))
+                    dest = next(link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
+                self.currentReceiver = next(device for device in network._node if device == Device(dest))
             sendable = min(self.remainingSize, max((iterationTime - inIteration) * self.currentSpeed, 1.0))
 
             if inIteration + sendable / self.currentSpeed > iterationTime:  # Can current frame be sent within this simulator iteration?
