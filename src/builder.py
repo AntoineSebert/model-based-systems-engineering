@@ -4,7 +4,7 @@ from xml.etree.ElementTree import dump, indent, parse
 
 from matplotlib import pyplot  # type: ignore
 
-from model import Device, EndSystem, Switch, InputPort, Solution, Stream
+from model import Device, EndSystem, Switch, Solution, Stream
 
 from networkx import DiGraph, DiGraph, draw, spring_layout  # type: ignore
 
@@ -16,7 +16,11 @@ from search import findStreamSolution
 def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 	monetaryCost = 0
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
-
+	
+	Constraints
+	----------
+	We do not allow parallel edges between devices
+	
 	Parameters
 	----------
 	file : Path
@@ -66,12 +70,8 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 		else:
 			dest = EndSystem(link.get("dest"))
 
-		counter = 1
-		while network.has_node(InputPort(dest.name + "$PORT" + str(counter))):
-			counter += 1
-		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
-		network.add_edge(src, intermediateNode, speed=(float(link.get('speed'))))  # src to intermediate node
-		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
+		network.add_edge(src, dest, speed=(float(link.get('speed'))))
+
 		monetaryCost += 1
 
 	print("Number of network devices: {}".format(len(network.nodes)))

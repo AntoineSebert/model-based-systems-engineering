@@ -14,6 +14,10 @@ from networkx import DiGraph  # type: ignore
 @dataclass
 class Device:
     name: str
+    currentFrame: Framelet = None  # Current frame being sent
+    remainingSize: int = 0
+    currentReceiver: Device = None
+    currentSpeed: float = 0.0
     ingress: Queue[Framelet] = field(default_factory=Queue)
     egress_main: Queue[Framelet] = field(default_factory=Queue)
     # egress_secondary: Queue[Framelet] = field(default_factory=Queue)
@@ -29,21 +33,7 @@ class Device:
             return self.name == other.name
         return False
 
-
-@dataclass(eq=False)
-class Switch(Device):
-    # queue: PriorityQueue = PriorityQueue()
-    speed: float = 1.0
-    # Todo: Change framelet to Frame
-    currentFrame: Framelet = None  # Current frame being sent
-    remainingSize: int = 0
-    currentReceiver: Device = None
-    currentSpeed: float = 0.0
-
     def emit(self: Switch, network: DiGraph, timeResolution) -> None:
-        # todo: check deadline?
-        # todo: Add time check. emit doesn't care what link speeds are. Emits all framelets on each iteration.
-
         '''
         for i in range(len(self.egress)):
             # print(len(self.egress))
@@ -64,36 +54,25 @@ class Switch(Device):
                 self.currentFrame = self.egress_main.get()
                 self.remainingSize = self.currentFrame.size
                 nextStep = next(link for link in self.currentFrame.route.links if link.src == self.name)
-                self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
-                dest = nextStep.dest
-                if '$' in nextStep.dest:
-                    dest = next(link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
-                self.currentReceiver = next(device for device in network._node if device == Device(dest))
+                self.currentSpeed = network.get_edge_data(Device(nextStep.src), Device(nextStep.dest))['speed']
+                self.currentReceiver = next(device for device in network._node if device == Device(nextStep.dest))
+
             sendable = min(self.remainingSize, max((iterationTime - inIteration) * self.currentSpeed, 1.0))
 
             if inIteration + sendable / self.currentSpeed > iterationTime:  # Can current frame be sent within this simulator iteration?
                 break
-            # print("In Switch")
-            # print("Remaining size: ", self.remainingSize)
-            # print("Sendable: ", sendable)
             self.remainingSize -= sendable
-            # print("Remaining size: ", self.remainingSize)
 
             if self.remainingSize <= 0:
-                # print("Frame delivered")
                 self.currentReceiver.ingress.put(self.currentFrame)
                 self.currentFrame = None
-            # print("\n")
             inIteration += (float(sendable) / self.currentSpeed)
 
         logging.info(f"Swtich {self.name} emitted framelet")
-        # for i in range(len(self.egress)):
-        #     # print(len(self.egress))
-        #     framelet = self.egress.pop()
-        #     nextStep = next(link for link in framelet.route.links if link.src == self.name)
-        #     nextStep.dest = nextStep.dest.split('$')[0]
-        #     receiver = next(device for device in network._node if device == Device(nextStep.dest))
-        #     receiver.ingress.append(framelet)
+
+
+@dataclass(eq=False)
+class Switch(Device):
 
     def receive(self: Switch, network: DiGraph, time: int, timeResolution: int) -> set['Stream']:
         misses: set['Framelet'] = set()
@@ -101,36 +80,13 @@ class Switch(Device):
         for i in range(self.ingress.qsize()):
             framelet = self.ingress.get()
             logging.info(f"Switch {self.name} received framelet")
-            #if time > framelet.releaseTime + framelet.stream.deadline:
-                #misses.add(framelet)
             self.egress_main.put(framelet)    # Queue instead
         return misses
-
-        # temp: PriorityQueue = PriorityQueue()
-        #
-        # while not self.queue.empty():
-        #     priority, framelet = self.queue.get()
-        #     logging.info(f"Switch {self.name} received framelet from {framelet.to_string()}")
-        #
-        #     if time < framelet.instance.local_deadline:
-        #         misses.add(framelet.instance.stream)
-        #
-        #     self.temp.put((priority, framelet))
-        #
-        # self.queue = temp
-        #
-        # return misses
 
 
 @dataclass(eq=False)
 class EndSystem(Device):
-    # Todo: Change framelet to Frame
-    currentFrame: Framelet = None # Current frame being sent
-    remainingSize: int = 0
-    currentReceiver: Device = None
-    currentSpeed: float = 0.0
     streams: list[Stream] = field(default_factory=list)
-
 
     def enqueueStreams(self, network, iteration, timeResolution: int): #route argument needed
         # First iteration
@@ -143,51 +99,6 @@ class EndSystem(Device):
 
             stream.instance += 1
 
-
-    def emit(self: EndSystem, network: DiGraph, timeResolution: int) -> None:
-        # todo: check deadline?
-        # todo: Add time check. emit doesn't care what link speeds are. Emits all framelets on each iteration.
-
-        inIteration = 0
-        # Framelets(now Frames) from the same stream are not distinguished. Have the same ID
-        while (inIteration <= timeResolution):
-            if self.egress_main.empty() and self.currentFrame is None:
-                break
-            if (self.remainingSize <= 0 or self.currentFrame is None):
-                self.currentFrame = self.egress_main.get()
-                print(self.currentFrame.route)
-                self.remainingSize = self.currentFrame.size
-
-                # nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
-                nextStep = next(link for link in self.currentFrame.route.links if link.src == self.name)
-                self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
-                dest = nextStep.dest
-                if '$' in nextStep.dest:
-                    dest = next(link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
-                self.currentReceiver = next(device for device in network._node if device == Device(dest))
-            sendable = min(self.remainingSize, max((timeResolution - inIteration) * self.currentSpeed, 1.0))
-            if inIteration + sendable / self.currentSpeed > timeResolution:  # Can current frame be sent within this simulator iteration?
-                break
-            # print("In EndSystem")
-            # print("Remaining size: ", self.remainingSize)
-            # print("Sendable: ", sendable)
-            self.remainingSize -= sendable
-            # print("Remaining size: ", self.remainingSize)
-
-            inIteration += (float(sendable) / self.currentSpeed)
-            self.currentFrame.localTime = inIteration
-
-            if self.remainingSize <= 0:
-                # print("Frame delivered")
-                self.currentReceiver.ingress.put(self.currentFrame)
-                self.currentFrame = None
-
-            # print("\n")
-            inIteration += (float(sendable)/self.currentSpeed)
-
-        logging.info(f"EndSystem {self.name} emitted framelet")
-
-
     def receive(self: EndSystem, network: DiGraph, time: int, timeResolution: int) -> set['Framelet']:
         misses: set['Framelet'] = set()
         for i in range(self.ingress.qsize()):
@@ -196,26 +107,13 @@ class EndSystem(Device):
             if self.name != framelet.route.links[-1].dest:
                 self.egress_main.put(framelet)  # Queue instead
             else: # Check if deadline is passed for frame
-                # print("Received frame")
                 transmissionTime = time*timeResolution - framelet.releaseTime
                 if framelet.stream.WCTT < (transmissionTime):
                     framelet.stream.WCTT = transmissionTime
                 if time*timeResolution > framelet.releaseTime + int(framelet.stream.deadline):
-                    int(framelet.stream.deadline)
-                    time * timeResolution
-                    # print("Deadline missed")
                     misses.add(framelet.stream)
         return misses
 
-
-@dataclass
-class InputPort:
-    name: str
-    def __hash__(self):
-        return hash(self.name)
-
-    def __eq__(self, other):
-        return self.name == other.name
 
 '''
 @dataclass

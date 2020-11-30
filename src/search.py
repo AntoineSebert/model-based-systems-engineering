@@ -1,5 +1,6 @@
 from networkx.algorithms.simple_paths import all_simple_paths as ap
 from networkx.algorithms.simple_paths import shortest_simple_paths as ssp
+from networkx.algorithms.connectivity.disjoint_paths import node_disjoint_paths
 
 
 from model import StreamSolution, Route, Link, Device, Switch, EndSystem
@@ -47,7 +48,8 @@ def findStreamSolution(network, stream) -> StreamSolution:
     print("\nFinding path from {0} to {1}".format(src.name, dest.name))
     streamSolution = StreamSolution(stream, [])
     try:
-        pathGenerator = k_shortest(network, src, dest)
+        pathGenerator = node_disjoint_paths(network, src, dest)
+        # pathGenerator = k_shortest(network, src, dest)
         streamSolution.routes.extend(findRoutes(pathGenerator, int(stream.rl)))
 
         print("Found at least 1 path\n")
