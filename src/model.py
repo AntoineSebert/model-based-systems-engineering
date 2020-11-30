@@ -16,7 +16,7 @@ class Device:
     name: str
     ingress: Queue[Framelet] = field(default_factory=Queue)
     egress_main: Queue[Framelet] = field(default_factory=Queue)
-    egress_secondary: Queue[Framelet] = field(default_factory=Queue)
+    # egress_secondary: Queue[Framelet] = field(default_factory=Queue)
     #ingress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
     #egress: list[Framelet] = field(default_factory=list)
 
