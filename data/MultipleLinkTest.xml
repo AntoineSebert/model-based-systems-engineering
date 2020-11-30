@@ -7,11 +7,7 @@
     <!-- Links are directional-->
     <!-- speed = bytes/us-->
     <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
-    <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
-    <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
 
-    <link src="SW1" dest="CTRL1" speed="12.5"/>
-    <link src="SW1" dest="CTRL1" speed="12.5"/>
     <link src="SW1" dest="CTRL1" speed="12.5"/>
 
     <!-- times in us -->

@@ -15,7 +15,8 @@ from networkx import DiGraph  # type: ignore
 class Device:
     name: str
     ingress: Queue[Framelet] = field(default_factory=Queue)
-    egress: Queue[Framelet] = field(default_factory=Queue)
+    egress_main: Queue[Framelet] = field(default_factory=Queue)
+    egress_secondary: Queue[Framelet] = field(default_factory=Queue)
     #ingress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
     #egress: list[Framelet] = field(default_factory=list)
 
@@ -57,10 +58,10 @@ class Switch(Device):
         inIteration = 0
         # Framelets(now Frames) from the same stream are not distinguished. Have the same ID
         while (inIteration <= iterationTime):
-            if self.egress.empty() and self.currentFrame is None:
+            if self.egress_main.empty() and self.currentFrame is None:
                 break
             if (self.remainingSize <= 0 or self.currentFrame is None):
-                self.currentFrame = self.egress.get()
+                self.currentFrame = self.egress_main.get()
                 self.remainingSize = self.currentFrame.size
                 nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
                 self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
@@ -102,7 +103,7 @@ class Switch(Device):
             logging.info(f"Switch {self.name} received framelet")
             #if time > framelet.releaseTime + framelet.stream.deadline:
                 #misses.add(framelet)
-            self.egress.put(framelet)    # Queue instead
+            self.egress_main.put(framelet)    # Queue instead
         return misses
 
         # temp: PriorityQueue = PriorityQueue()
@@ -138,7 +139,7 @@ class EndSystem(Device):
             for route in stream.streamSolution.routes:
                 size = int(stream.size)
                 index = index + 1
-                self.egress.put(Framelet(index, stream.instance, size, route, stream, iteration*timeResolution))
+                self.egress_main.put(Framelet(index, stream.instance, size, route, stream, iteration * timeResolution))
 
             stream.instance += 1
 
@@ -147,26 +148,25 @@ class EndSystem(Device):
         # todo: check deadline?
         # todo: Add time check. emit doesn't care what link speeds are. Emits all framelets on each iteration.
 
-        iterationTime = timeResolution # How far a single simulator iterations spans in time in microseconds
         inIteration = 0
         # Framelets(now Frames) from the same stream are not distinguished. Have the same ID
-        while (inIteration <= iterationTime):
-            if self.egress.empty() and self.currentFrame is None:
+        while (inIteration <= timeResolution):
+            if self.egress_main.empty() and self.currentFrame is None:
                 break
             if (self.remainingSize <= 0 or self.currentFrame is None):
-                self.currentFrame = self.egress.get()
+                self.currentFrame = self.egress_main.get()
+                print(self.currentFrame.route)
                 self.remainingSize = self.currentFrame.size
 
-                nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
+                # nextStep = deepcopy(next(link for link in self.currentFrame.route.links if link.src == self.name))
+                nextStep = next(link for link in self.currentFrame.route.links if link.src == self.name)
                 self.currentSpeed = network.get_edge_data(Device(nextStep.src), InputPort(nextStep.dest))['speed']
+                dest = nextStep.dest
                 if '$' in nextStep.dest:
-                    nextStep.dest = next(link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
-                self.currentReceiver = next(device for device in network._node if device == Device(nextStep.dest))
-
-
-            sendable = min(self.remainingSize, max((iterationTime - inIteration) * self.currentSpeed, 1.0))
-
-            if inIteration + sendable / self.currentSpeed > iterationTime: # Can current frame be sent within this simulator iteration?
+                    dest = next(link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
+                self.currentReceiver = next(device for device in network._node if device == Device(dest))
+            sendable = min(self.remainingSize, max((timeResolution - inIteration) * self.currentSpeed, 1.0))
+            if inIteration + sendable / self.currentSpeed > timeResolution:  # Can current frame be sent within this simulator iteration?
                 break
             # print("In EndSystem")
             # print("Remaining size: ", self.remainingSize)
@@ -174,11 +174,14 @@ class EndSystem(Device):
             self.remainingSize -= sendable
             # print("Remaining size: ", self.remainingSize)
 
+            inIteration += (float(sendable) / self.currentSpeed)
+            self.currentFrame.localTime = inIteration
 
             if self.remainingSize <= 0:
                 # print("Frame delivered")
                 self.currentReceiver.ingress.put(self.currentFrame)
                 self.currentFrame = None
+
             # print("\n")
             inIteration += (float(sendable)/self.currentSpeed)
 
@@ -191,7 +194,7 @@ class EndSystem(Device):
             framelet = self.ingress.get()
             logging.info(f"EndSystem {self.name} received framelet from")
             if self.name != framelet.route.links[-1].dest:
-                self.egress.put(framelet)  # Queue instead
+                self.egress_main.put(framelet)  # Queue instead
             else: # Check if deadline is passed for frame
                 # print("Received frame")
                 transmissionTime = time*timeResolution - framelet.releaseTime
@@ -321,6 +324,14 @@ class Framelet:
         the stream instance the Framelet belongs to
     size : int
         the size of the Framelet
+    route : Route
+        The list of links that makes up a path in the network
+    stream : Stream
+        The stream object the framelets was constructed from
+    releaseTime : int
+        The simulator time at which the framelet was initially released
+    localTime : int
+        The fraction of time available in current iteration used. Resets to 0 on each simulator iteration
 
     Methods
     -------
@@ -334,6 +345,7 @@ class Framelet:
     route: Route
     stream: Stream
     releaseTime: int
+    localTime: float = 0 # Amount of current iteration time used from framelets perspective [assumes units in microseconds]
 
     def __eq__(self: Framelet, other: object) -> bool:
         if isinstance(other, Framelet):
