@@ -29,7 +29,7 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 # resources in OneDrive slides
 def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
 	logger = logging.getLogger()
-	timeResolution = 5 # Number of microseconds simulated in a single iteration
+	timeResolution = 8 # Number of microseconds simulated in a single iteration
 	iteration: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()
