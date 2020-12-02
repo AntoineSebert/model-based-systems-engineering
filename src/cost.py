@@ -5,6 +5,17 @@ from model import Solution, StreamSolution
 
 
 def redundancyCheck(solution: Solution) -> dict['StreamSolution':bool]:
+    '''
+
+    Parameters
+    ----------
+    solution
+
+    Returns
+    -------
+    A list of stream solutions and a bool for each denoting whether network topology supports the required redundancy level.
+    True if so, False if no.
+    '''
     redundant = [[streamSolution, True] for streamSolution in solution.streamSolutions]
     for index, streamSolution in enumerate(solution.streamSolutions):
         unique_links = set([link for route in streamSolution.routes for link in route.links])
