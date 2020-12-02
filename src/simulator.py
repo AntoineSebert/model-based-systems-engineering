@@ -41,10 +41,14 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	misses: set[Stream] = set()
 	totalMisses = 0
 
-	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
+	# loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
+
+	while True:
+
+	'''
 	while loop_cond(iteration, time_limit):
 		# print("Time({})".format(iteration))
-
+		
 		misses = _events(logger, iteration, timeResolution, network, deviceQueue, streams)
 		totalMisses += len(misses)
 		if len(misses) != 0 and stop_on_miss:
@@ -53,7 +57,7 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 		misses.clear()
 
 		iteration += 1
-
+	'''
 	print("Missed a total of {} deadlines when running for {} milliseconds".format(totalMisses, iteration*timeResolution/1000.0))
 
 	wctt_sum = 0
