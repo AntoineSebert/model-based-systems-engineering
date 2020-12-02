@@ -10,7 +10,7 @@ from functools import total_ordering
 
 from networkx import DiGraph  # type: ignore
 
-
+@total_ordering
 @dataclass
 class Device:
     name: str
@@ -18,20 +18,23 @@ class Device:
     remainingSize: int = 0
     currentReceiver: Device = None
     currentSpeed: float = 0.0
+    localTime: float = 0.0
     ingress: Queue[Framelet] = field(default_factory=Queue)
     egress_main: Queue[Framelet] = field(default_factory=Queue)
-    # egress_secondary: Queue[Framelet] = field(default_factory=Queue)
-    #ingress: list[Framelet] = field(default_factory=list)  # replace by dict(time, frames)
-    #egress: list[Framelet] = field(default_factory=list)
 
     def __hash__(self):
-        # print(hash(self.name))
         return hash(self.name)
 
     def __eq__(self, other):
         if isinstance(other, Device):
             return self.name == other.name
         return False
+
+    def __lt__(self, other):
+        if isinstance(other, Device):
+            return self.localTime < other.localTime
+        else:
+            RuntimeError(f"Mismatch between device {self=} and other {other=}")
 
     def emit(self: Switch, network: DiGraph, timeResolution) -> None:
         '''
@@ -62,13 +65,18 @@ class Device:
             if inIteration + sendable / self.currentSpeed > iterationTime:  # Can current frame be sent within this simulator iteration?
                 break
             self.remainingSize -= sendable
+            inIteration += (float(sendable) / self.currentSpeed)
+            self.currentFrame = inIteration
 
             if self.remainingSize <= 0:
                 self.currentReceiver.ingress.put(self.currentFrame)
                 self.currentFrame = None
-            inIteration += (float(sendable) / self.currentSpeed)
 
         logging.info(f"Swtich {self.name} emitted framelet")
+
+    def move_to_egress(self):
+        pass
+
 
 
 @dataclass(eq=False)
@@ -80,7 +88,7 @@ class Switch(Device):
         for i in range(self.ingress.qsize()):
             framelet = self.ingress.get()
             logging.info(f"Switch {self.name} received framelet")
-            self.egress_main.put(framelet)    # Queue instead
+            self.egress_main.put(framelet)  # Queue instead
         return misses
 
 
@@ -88,7 +96,7 @@ class Switch(Device):
 class EndSystem(Device):
     streams: list[Stream] = field(default_factory=list)
 
-    def enqueueStreams(self, network, iteration, timeResolution: int): #route argument needed
+    def enqueueStreams(self, network, iteration, timeResolution: int):  # route argument needed
         # First iteration
         index = 0
         for stream in filter(lambda n: not (iteration * timeResolution % int(n.period)), self.streams):
@@ -106,11 +114,11 @@ class EndSystem(Device):
             logging.info(f"EndSystem {self.name} received framelet from")
             if self.name != framelet.route.links[-1].dest:
                 self.egress_main.put(framelet)  # Queue instead
-            else: # Check if deadline is passed for frame
-                transmissionTime = time*timeResolution - framelet.releaseTime
+            else:  # Check if deadline is passed for frame
+                transmissionTime = time * timeResolution - framelet.releaseTime
                 if framelet.stream.WCTT < (transmissionTime):
                     framelet.stream.WCTT = transmissionTime
-                if time*timeResolution > framelet.releaseTime + int(framelet.stream.deadline):
+                if time * timeResolution > framelet.releaseTime + int(framelet.stream.deadline):
                     misses.add(framelet.stream)
         return misses
 
@@ -142,15 +150,16 @@ class Link:
             return True
         return False
 
+
 @dataclass
 class StreamSolution:
     stream: Stream
-    routes: List[Route]
+    routes: list['Route']
 
 
 @dataclass
 class Solution:
-    streamSolutions: List[StreamSolution]
+    streamSolutions: list['StreamSolution']
 
     def printSolution(self):
         print("----------------------------------------------")
@@ -188,7 +197,7 @@ class Solution:
 @dataclass
 class Route:
     num: int
-    links: List[Link]
+    links: list['Link']
 
     def __hash__(self):
         # print("using hash")
@@ -228,8 +237,12 @@ class Framelet:
         The stream object the framelets was constructed from
     releaseTime : int
         The simulator time at which the framelet was initially released
+    currentDevice : Device
+        The framelet's current location in the network, i.e. the egress port in which the framelet is currently residing
     localTime : int
         The fraction of time available in current iteration used. Resets to 0 on each simulator iteration
+    priority : int
+        The priority of the framelet. Assumes values 1-8
 
     Methods
     -------
@@ -243,7 +256,9 @@ class Framelet:
     route: Route
     stream: Stream
     releaseTime: int
-    localTime: float = 0 # Amount of current iteration time used from framelets perspective [assumes units in microseconds]
+    currentDevice: Device
+    localTime: float = 0
+    priority: int = 1
 
     def __eq__(self: Framelet, other: object) -> bool:
         if isinstance(other, Framelet):
@@ -255,13 +270,13 @@ class Framelet:
             return NotImplemented
 
     def __lt__(self: Framelet, other: object) -> bool:
+        # Relevant for egress priority queues
         if isinstance(other, Framelet):
             if self.instance is not other.instance:
                 RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
 
-            return self.id.__lt__(other.id)
         else:
-            return NotImplemented
+            RuntimeError(f"Expectedd StreamInstance {other=} to be of type Framelet")
 
     def to_string(self: Framelet) -> str:
         """Returns a short string description of the Framelet.
@@ -383,8 +398,7 @@ class Stream(Sequence):
     rl: int
     streamSolution: StreamSolution
     instance: int = 0
-    WCTT: int = 0 # Worst-case transmission time detected while simulating
-
+    WCTT: int = 0  # Worst-case transmission time detected while simulating
 
     def __hash__(self: Stream) -> int:
         return hash(self.id)

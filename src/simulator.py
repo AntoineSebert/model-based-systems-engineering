@@ -1,8 +1,10 @@
 import logging
 
-from model import Switch, EndSystem, Results, Stream
+from model import Switch, EndSystem, Device, Results, Stream
 
 from networkx import DiGraph  # type: ignore
+
+from queue import PriorityQueue
 
 
 def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream]) -> set['Framelet']:
@@ -31,13 +33,19 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	logger = logging.getLogger()
 	timeResolution = 8 # Number of microseconds simulated in a single iteration
 	iteration: int = 0
-	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
+
+	deviceQueue = PriorityQueue()
+	for device in network.nodes:
+		deviceQueue.put(device)
+
 	misses: set[Stream] = set()
 	totalMisses = 0
+
+	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	while loop_cond(iteration, time_limit):
 		# print("Time({})".format(iteration))
 
-		misses = _events(logger, iteration, timeResolution, network, streams)
+		misses = _events(logger, iteration, timeResolution, network, deviceQueue, streams)
 		totalMisses += len(misses)
 		if len(misses) != 0 and stop_on_miss:
 			break
