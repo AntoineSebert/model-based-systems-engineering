@@ -32,6 +32,7 @@ class Device:
         else:
             RuntimeError(f"Mismatch between device {self=} and other {other=}")
 
+    # We always advance time by the guard band!
     def emit(self, network: DiGraph) -> None:
         if not self.egress_main.empty():
             frame = self.egress_main.get()
@@ -40,13 +41,12 @@ class Device:
             receiver = next(device for device in network._node if device == Device(nextStep.dest))
 
             # advance time for this device and the frame sent
-            timeAdvancement = float(frame.size) / speed
-            frame.localTime += timeAdvancement
-            self.localTime += timeAdvancement
-
+            self.localTime += 64.0 / speed
+            frame.localTime += self.localTime
             receiver.ingress.put(frame) # Send framelet
         else:
-            self.localTime += 64/12.5
+            self.localTime += 64 / 12.5
+
 
         logging.info(f"Swtich {self.name} emitted framelet")
 
@@ -228,17 +228,14 @@ class Framelet:
         if isinstance(other, Framelet):
             if self.instance is not other.instance:
                 RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
-
-            return self.id.__eq__(other.id)
+            return self.stream_instance == other.stream_instance and self.index == other.index and self.priority == other.priority
         else:
-            return NotImplemented
+            RuntimeError(f"Expectedd StreamInstance {other=} to be of type Framelet")
 
     def __lt__(self: Framelet, other: object) -> bool:
         # Relevant for egress priority queues
         if isinstance(other, Framelet):
-            if self.instance is not other.instance:
-                RuntimeError(f"StreamInstance mismatch between {self=} and {other=}")
-
+            return self.priority > other.priority
         else:
             RuntimeError(f"Expectedd StreamInstance {other=} to be of type Framelet")
 

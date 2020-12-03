@@ -55,8 +55,7 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
     loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 
-    while loop_cond(iteration, time_limit):
-        # print("Time({})".format(iteration))
+    while loop_cond(simulator_age, time_limit):
         # Check if new stream instances should be scheduled
 
         while True:
