@@ -15,8 +15,9 @@ from networkx import DiGraph  # type: ignore
 class Device:
     name: str
     localTime: float = 0.0
-    ingress: Queue[Framelet] = field(default_factory=Queue)
-    egress_main: Queue[Framelet] = field(default_factory=Queue)
+    # has_emitted: bool = False
+    ingress: PriorityQueue[Framelet] = field(default_factory=PriorityQueue)
+    egress_main: PriorityQueue[Framelet] = field(default_factory=PriorityQueue)
 
     def __hash__(self):
         return hash(self.name)
@@ -42,11 +43,10 @@ class Device:
 
             # advance time for this device and the frame sent
             self.localTime += 64.0 / speed
-            frame.localTime += self.localTime
+            frame.localTime = self.localTime
             receiver.ingress.put(frame) # Send framelet
         else:
             self.localTime += 64 / 12.5
-
 
         logging.info(f"Swtich {self.name} emitted framelet")
 
@@ -66,16 +66,6 @@ class Switch(Device):
 class EndSystem(Device):
     streams: list[Stream] = field(default_factory=list)
 
-    def enqueueStreams(self, network, iteration, timeResolution: int):  # route argument needed
-        # First iteration
-        index = 0
-        for stream in filter(lambda n: not (iteration * timeResolution % int(n.period)), self.streams):
-            for route in stream.streamSolution.routes:
-                size = int(stream.size)
-                index = index + 1
-                self.egress_main.put(Framelet(index, stream.instance, size, route, stream, iteration * timeResolution))
-            stream.instance += 1
-
     def receive(self: EndSystem) -> set['Stream']:
         misses: set['Stream'] = set()
         for i in range(self.ingress.qsize()):
@@ -89,20 +79,6 @@ class EndSystem(Device):
                 if framelet.localTime > framelet.stream_instance.local_deadline:
                     misses.add(framelet.stream_instance.stream)
         return misses
-
-
-'''
-@dataclass
-class Route:
-    subgraph: DiGraph
-
-    def check(self: Route) -> None:
-        # check if subgraph only is a sequence of nodes, with EndSystem as src and dest
-        pass
-
-    def transmission_time(self: Route, size: int) -> int:
-        return sum(-(-size // speed) for u, v, speed in self.subgraph.edges(data="speed"))
-'''
 
 
 @dataclass
@@ -203,14 +179,8 @@ class Framelet:
         The list of links that makes up a path in the network
     stream : Stream
         The stream object the framelets was constructed from
-    releaseTime : int
-        The simulator time at which the framelet was initially released
     currentDevice : Device
         The framelet's current location in the network, i.e. the egress port in which the framelet is currently residing
-    localTime : int
-        The fraction of time available in current iteration used. Resets to 0 on each simulator iteration
-    priority : int
-        The priority of the framelet. Assumes values 1-8
 
     Methods
     -------
@@ -222,7 +192,6 @@ class Framelet:
     size: int
     localTime: float
     route: Route
-    priority: int = 1
 
     def __eq__(self: Framelet, other: object) -> bool:
         if isinstance(other, Framelet):
@@ -235,7 +204,7 @@ class Framelet:
     def __lt__(self: Framelet, other: object) -> bool:
         # Relevant for egress priority queues
         if isinstance(other, Framelet):
-            return self.priority > other.priority
+            return self.stream_instance.stream.rl > other.stream_instance.stream.rl
         else:
             RuntimeError(f"Expectedd StreamInstance {other=} to be of type Framelet")
 
@@ -282,7 +251,6 @@ class StreamInstance(Sequence):
     """
 
     stream: Stream
-    dest: str
     instance: int
     release_time: int
     local_deadline: int

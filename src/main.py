@@ -79,5 +79,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-	cProfile.run('main()')
-	# main()
+	# cProfile.run('main()')
+	main()
