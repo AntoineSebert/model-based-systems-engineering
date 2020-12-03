@@ -52,7 +52,11 @@ def create_streams(root: Element, network: DiGraph) -> set[Stream]:
 
 def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
-
+	
+	Constraints
+	----------
+	We do not allow parallel edges between devices
+	
 	Parameters
 	----------
 	file : Path

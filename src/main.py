@@ -12,6 +12,10 @@ from output import to_file
 
 from simulator import simulate
 
+from cost import redundancyCheck
+
+import cProfile
+
 
 def _create_cli_parser() -> ArgumentParser:
 	"""Creates a CLI argument parser and returns it.
@@ -78,6 +82,7 @@ def display_graph(network: DiGraph) -> None:
 
 
 def main() -> int:
+
 	args = _create_cli_parser().parse_args()
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
@@ -95,4 +100,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
+	# cProfile.run('main()')
 	main()
