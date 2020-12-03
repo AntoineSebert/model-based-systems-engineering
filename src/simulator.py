@@ -9,30 +9,6 @@ from queue import PriorityQueue
 from copy import deepcopy
 
 
-def enqueue_stream_instance(network: DiGraph, stream: Stream, device: EndSystem):
-    pass
-
-
-def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream]) -> set['Framelet']:
-    misses = set()
-
-    # Check if new framelets should be added to EndSystem queue for emission
-    for endSystem in filter(lambda n: isinstance(n, EndSystem), network.nodes):
-        endSystem.enqueueStreams(network, iteration, timeResolution)
-
-    # Go through all endsystem and switches in network and emit from egress queue
-    for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
-        device.emit(network, timeResolution)
-
-    for device in filter(lambda n: isinstance(n, EndSystem) or isinstance(n, Switch), network.nodes):
-        misses |= device.receive(network, iteration, timeResolution)
-
-    for stream in misses:
-        logger.warning(f"Missed deadline for {stream.id} at time {iteration * timeResolution}")
-
-    return misses
-
-
 # resources in OneDrive slides
 def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
     logger = logging.getLogger()
