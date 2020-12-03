@@ -69,7 +69,7 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams, solution, cost = build(args.file, args.display_graph)
+	network, streams, solution = build(args.file, args.display_graph)
 	redundant = redundancyCheck(solution)
 	for x in redundant:
 		print(x)
