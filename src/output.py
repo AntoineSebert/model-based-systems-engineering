@@ -3,18 +3,18 @@ from logging import getLogger
 from pathlib import Path
 from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 
-from model import Results
+from model import Solution
 
 
-def _add_streams(network_desc: Element, results: Results) -> None:
+def _add_streams(network_desc: Element, results: Solution) -> None:
 	"""Add the streams and their descendants into an XML element.
 
 	Parameters
 	----------
 	network_desc : Element
 		An XML element to hold the stream-related data.
-	results : Results
-		Results from which import the stream-related data.
+	results : Solution
+		Solution from which import the stream-related data.
 	"""
 
 	for stream in results.streams:
@@ -55,7 +55,7 @@ def _create_filepath(file: Path) -> Path:
 	return new_file.with_suffix(suffix)
 
 
-def to_file(results: Results, file: Path) -> Path:
+def to_file(results: Solution, file: Path) -> Path:
 	"""Exports a result into a file.
 
 	Parameters

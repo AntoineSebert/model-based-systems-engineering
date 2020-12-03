@@ -1,13 +1,13 @@
 import logging
 
-from model import Switch, Device, EndSystem, Results, Stream
+from model import Device, EndSystem, Framelet, Solution, Stream
 
 from networkx import DiGraph  # type: ignore
 
 
-def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream],
-	emitters: set[EndSystem], receivers: set[Device]) -> set['Framelet']:
-
+def _events(iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream],
+	emitters: set[EndSystem], receivers: set[Device]) -> set[Framelet]:
+	logger = logging.getLogger()
 	misses = set()
 
 	# Check if new framelets should be added to EndSystem queue for emission
@@ -27,9 +27,9 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 	return misses
 
 
-def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
+def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Solution:
 	logger = logging.getLogger()
-	timeResolution = 8 # Number of microseconds simulated in a single iteration
+	timeResolution = 8  # Number of microseconds simulated in a single iteration
 	iteration: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()
@@ -39,7 +39,7 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	receivers: set[Device] = {stream.dest for stream in streams}
 
 	while loop_cond(iteration, time_limit):
-		misses = _events(logger, iteration, timeResolution, network, streams, emitters, receivers)
+		misses = _events(iteration, timeResolution, network, streams, emitters, receivers)
 		totalMisses += len(misses)
 
 		if len(misses) != 0 and stop_on_miss:
@@ -49,13 +49,6 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
 		iteration += 1
 
-	wctt_sum = 0
-	wctts = []
-
-	for stream in streams:
-		wctt_sum += stream.WCTT
-		wctts.append(stream.WCTT)
-
 	logger.info("done.")
 
-	return Results(network, streams, {})
+	return Solution(network, streams, {})
