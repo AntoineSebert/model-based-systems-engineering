@@ -344,3 +344,13 @@ class Solution:
 	def transmission_time(self: Solution) -> tuple[list[int], int]:
 		wctts = [stream.WCTT for stream in self.streams]
 		return wctts, sum(wctts)
+
+
+"""
+The structure is:
+- key: emission time, hyperperiod-wise
+- value : dict
+	- key : emitting device
+	- value : set of streams to emit by said device
+"""
+Scheduling = dict[int, dict[EndSystem, set[StreamInstance]]]

@@ -1,12 +1,12 @@
 import logging
 
-from model import Device, EndSystem, Framelet, Solution, Stream
+from model import Device, EndSystem, Framelet, Scheduling, Solution, Stream
 
 from networkx import DiGraph  # type: ignore
 
 
 def _events(iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream],
-	emitters: set[EndSystem], receivers: set[Device]) -> set[Framelet]:
+	emitters: set[Device], receivers: set[Device]) -> set[Framelet]:
 	logger = logging.getLogger()
 	misses = set()
 
@@ -27,16 +27,14 @@ def _events(iteration: int, timeResolution: int, network: DiGraph, streams: set[
 	return misses
 
 
-def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Solution:
+def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emitters: set[Device],
+	receivers: set[Device], time_limit: int, stop_on_miss: bool) -> Solution:
 	logger = logging.getLogger()
 	timeResolution = 8  # Number of microseconds simulated in a single iteration
 	iteration: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()
 	totalMisses = 0
-
-	emitters: set[EndSystem] = {stream.src for stream in streams}
-	receivers: set[Device] = {stream.dest for stream in streams}
 
 	while loop_cond(iteration, time_limit):
 		misses = _events(iteration, timeResolution, network, streams, emitters, receivers)

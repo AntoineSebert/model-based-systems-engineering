@@ -5,7 +5,7 @@ from math import lcm
 from pathlib import Path
 from xml.etree.ElementTree import Element, dump, indent, parse
 
-from model import EndSystem, Link, Stream, StreamInstance, Switch
+from model import Device, EndSystem, Link, Scheduling, Stream, StreamInstance, Switch
 
 from networkx import DiGraph  # type: ignore
 from networkx.algorithms.connectivity.disjoint_paths import node_disjoint_paths  # type: ignore
@@ -34,6 +34,12 @@ def create_links(root: Element, network: DiGraph) -> DiGraph:
 
 
 def create_streams(root: Element, network: DiGraph) -> set[Stream]:
+	"""
+	Raises
+	------
+	NetworkXNoPath
+		From `node_disjoint_paths`, if no path from source to target could be found.
+	"""
 	streams: set[Stream] = set()
 
 	for _stream in root.iter("stream"):
@@ -46,6 +52,7 @@ def create_streams(root: Element, network: DiGraph) -> set[Stream]:
 			int(_stream.get("deadline")),
 			int(_stream.get("rl")),
 		)
+
 		paths = list(islice(node_disjoint_paths(network, stream.src, stream.dest), stream.rl))
 		stream.routes = [[Link(path[ii], path[ii + 1]) for ii in range(len(path) - 1)] for i, path in enumerate(paths)]
 
@@ -77,9 +84,10 @@ def _get_emission_times(streams: set[Stream], hyperperiod: int) -> dict[int, set
 	to be emitted at time 50, hyperperiod-wise.
 	"""
 
-	stream_emission_times: dict[Stream, set[int]] = {stream: {i * stream.period for i in range(int(hyperperiod / stream.period))} for stream in streams}
-
-	emission_times: dict[int, set[Streams]] = defaultdict(set)
+	stream_emission_times: dict[Stream, set[int]] = {
+		stream: {i * stream.period for i in range(int(hyperperiod / stream.period))} for stream in streams
+	}
+	emission_times: dict[int, set[Stream]] = defaultdict(set)
 
 	for stream, times in stream_emission_times.items():
 		for time in times:
@@ -88,16 +96,10 @@ def _get_emission_times(streams: set[Stream], hyperperiod: int) -> dict[int, set
 	return emission_times
 
 
-def _schedule_stream_emissions(streams: set[Stream], hyperperiod: int) -> dict[int, dict[EndSystem, set[StreamInstance]]]:
-	"""Stream emission static scheduling.
-	The structure is:
-	- key: emission time, hyperperiod-wise
-	- value : dict
-		- key : emitting device
-		- value : set of streams to emit by said device
-	"""
+def _schedule_stream_emissions(streams: set[Stream], hyperperiod: int) -> Scheduling:
+	"""Stream emission static scheduling. Check Model.Scheduling for more info."""
 
-	emission_times =_get_emission_times(streams, hyperperiod)
+	emission_times = _get_emission_times(streams, hyperperiod)
 	stream_emissions: dict[int, dict[EndSystem, set[StreamInstance]]] = {}
 
 	for time, streams in emission_times.items():
@@ -111,7 +113,45 @@ def _schedule_stream_emissions(streams: set[Stream], hyperperiod: int) -> dict[i
 	return stream_emissions
 
 
-def build(file: Path) -> tuple[DiGraph, set[Stream]]:
+def _get_emitting_devices(network: DiGraph, streams: set[Stream]) -> set[Device]:
+	"""Returns all the Devices that both:
+	- have at least one outgoing edge
+	- are on a route or stream source
+	"""
+
+	outgoing_devices: set[Device] = {u for u, v in network.out_edges()}
+	emitting_devices: set[Device] = set()
+
+	for device in outgoing_devices:
+		for stream in streams:
+			for route in stream.routes:
+				if device in route:
+					emitting_devices.add(device)
+					break
+
+	return emitting_devices
+
+
+def _get_receiving_devices(network: DiGraph, streams: set[Stream]) -> set[Device]:
+	"""Returns all the Devices that both:
+	- have at least one ingoing edge
+	- are on a route or stream dest
+	"""
+
+	ingoing_devices: set[Device] = {u for u, v in network.in_edges()}
+	receiving_devices: set[Device] = set()
+
+	for device in ingoing_devices:
+		for stream in streams:
+			for route in stream.routes:
+				if device in route:
+					receiving_devices.add(device)
+					break
+
+	return receiving_devices
+
+
+def build(file: Path) -> tuple[DiGraph, set[Stream], Scheduling, set[Device], set[Device]]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Constraints
@@ -140,8 +180,8 @@ def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	network = create_links(root, get_devices(root, DiGraph()))
 	streams = create_streams(root, network)
 	hyperperiod = _compute_hyperperiod(streams)
-	stream_emissions =_schedule_stream_emissions(streams, hyperperiod)
+	stream_emissions = _schedule_stream_emissions(streams, hyperperiod)
 
 	logger.info("done.")
 
-	return network, streams, stream_emissions
+	return network, streams, stream_emissions, _get_emitting_devices(network, streams), _get_receiving_devices(network, streams)

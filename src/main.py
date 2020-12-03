@@ -82,16 +82,16 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams, stream_emissions = build(args.file)
+	network, streams, stream_emissions, emitters, receivers = build(args.file)
 
 	if args.display_graph:
 		display_graph(network)
 
-	results = simulate(network, streams, args.time, args.stop)
+	results = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop)
 
 	# to_file(results, args.file)
 
-	exit()
+	return 0
 
 
 if __name__ == "__main__":
