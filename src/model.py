@@ -71,7 +71,6 @@ class Switch(Device):
 class EndSystem(Device):
 	streams: list[Stream] = field(default_factory=list)
 
-	# get rid of this thing
 	def enqueueStreams(self: EndSystem, network: DiGraph, iteration: int, timeResolution: int) -> None:
 		index = 0
 		for stream in filter(lambda n: not (iteration * timeResolution % n.period), self.streams):
@@ -235,6 +234,9 @@ class StreamInstance(Sequence):
 			return self.local_deadline.__lt__(other.local_deadline)
 		else:
 			return NotImplemented
+
+	def __hash__(self: StreamInstance) -> int:
+		return hash(self.stream.id.__hash__() + self.local_deadline)
 
 	def check_framelets(self: StreamInstance) -> int:
 		"""Checks that the sum of the sizes of all framelets is equal to the size of the stream.

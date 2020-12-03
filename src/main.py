@@ -82,7 +82,7 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams = build(args.file)
+	network, streams, stream_emissions = build(args.file)
 
 	if args.display_graph:
 		display_graph(network)
