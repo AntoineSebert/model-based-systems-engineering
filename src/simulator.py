@@ -11,7 +11,6 @@ from copy import deepcopy
 
 # resources in OneDrive slides
 def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
-	devices = network.nodes
 	logger = logging.getLogger()
 	iteration: int = 0
 	simulator_age_current = 0
@@ -34,7 +33,7 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	simulator_age_current, currentDevice = deviceQueue.get()
 	while loop_cond(simulator_age_last, time_limit):
-		print(simulator_age_current)
+		# print(simulator_age_current)
 		# Check if new stream instances should be scheduled
 		while True:
 			release_time, stream_instance = streamScheduler.get()
@@ -82,9 +81,7 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 		print("Stream{} WCTT: {} microseconds".format(stream.id, stream.WCTT))
 		wctt_sum += stream.WCTT
 		wctts.append(stream.WCTT)
-	print("Device times in microseconds:")
-	for device in network.nodes:
-		print(device.localTime)
+
 	print()
 	print("Average WCTT: {} microseconds".format(round(wctt_sum / len(streams), 2)))
 	print("Worst transmission time: {} microseconds".format(max(wctts)))
