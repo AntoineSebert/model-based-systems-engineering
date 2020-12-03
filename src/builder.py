@@ -97,8 +97,10 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 		stream.get("period"),
 		int(stream.get("deadline")),
 		stream.get("rl"),
+		next(device for device in network.nodes if stream.get("src") == device.name),
 		set(),
 	) for stream in root.iter("stream")}
+	print(streams)
 
 	allStreamRoutes = Solution([])
 	for stream in streams:

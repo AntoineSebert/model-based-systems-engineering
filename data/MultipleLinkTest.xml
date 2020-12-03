@@ -3,13 +3,15 @@
 
     <device name="FRONT_CAM" type="EndSystem"/>
     <device name="SW1" type="Switch"/>
+    <device name="SW2" type="Switch"/>
     <device name="CTRL1" type="EndSystem"/>
 
     <!-- Links are directional-->
     <!-- speed = bytes/us-->
     <link src="FRONT_CAM" dest="SW1" speed="12.5"/>
-
     <link src="SW1" dest="CTRL1" speed="12.5"/>
+    <link src="FRONT_CAM" dest="SW2" speed="12.5"/>
+    <link src="SW2" dest="CTRL1" speed="12.5"/>
 
     <!-- times in us -->
     <stream id="Stream00" src="FRONT_CAM" dest="CTRL1" size="800" period="20000" deadline="10000" rl="2"/>
