@@ -13,7 +13,7 @@ from numpy import sqrt  # type: ignore
 from search import findStreamSolution
 
 
-def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
+def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], Solution, int]:
 	monetaryCost = 0
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 	
@@ -125,4 +125,4 @@ def build(file: Path, display_graph) -> tuple[DiGraph, set[Stream], int]:
 
 	allStreamRoutes.printSolution()
 
-	return network, streams, monetaryCost
+	return network, streams, allStreamRoutes, monetaryCost
