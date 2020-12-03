@@ -1,22 +1,24 @@
 import logging
 
-from model import Switch, EndSystem, Results, Stream
+from model import Switch, Device, EndSystem, Results, Stream
 
 from networkx import DiGraph  # type: ignore
 
 
-def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream]) -> set['Framelet']:
+def _events(logger, iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream],
+	emitters: set[EndSystem], receivers: set[Device]) -> set['Framelet']:
+
 	misses = set()
 
 	# Check if new framelets should be added to EndSystem queue for emission
-	for stream in streams:
-		stream.src.enqueueStreams(network, iteration, timeResolution, stream)
+	for device in emitters:
+		device.enqueueStreams(network, iteration, timeResolution)
 
 	# Go through all endsystem and switches in network and emit from egress queue
-	for device in network.nodes:
+	for device in emitters:
 		device.emit(network, timeResolution)
 
-	for device in network.nodes:
+	for device in receivers:
 		misses |= device.receive(network, iteration, timeResolution)
 
 	for stream in misses:
@@ -25,17 +27,19 @@ def _events(logger, iteration: int, timeResolution: int, network: DiGraph, strea
 	return misses
 
 
-# resources in OneDrive slides
 def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_miss: bool) -> Results:
 	logger = logging.getLogger()
-	timeResolution = 5 # Number of microseconds simulated in a single iteration
+	timeResolution = 1 # Number of microseconds simulated in a single iteration / remove ?
 	iteration: int = 0
 	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
 	misses: set[Stream] = set()
 	totalMisses = 0
 
+	emitters: set[EndSystem] = {stream.src for stream in streams}
+	receivers: set[Device] = {stream.dest for stream in streams}
+
 	while loop_cond(iteration, time_limit):
-		misses = _events(logger, iteration, timeResolution, network, streams)
+		misses = _events(logger, iteration, timeResolution, network, streams, emitters, receivers)
 		totalMisses += len(misses)
 
 		if len(misses) != 0 and stop_on_miss:
@@ -45,18 +49,13 @@ def simulate(network: DiGraph, streams: set[Stream], time_limit: int, stop_on_mi
 
 		iteration += 1
 
-	print("Missed a total of {} deadlines when running for {} milliseconds".format(totalMisses, iteration*timeResolution/1000.0))
-
 	wctt_sum = 0
 	wctts = []
 
 	for stream in streams:
-		print("Stream{} WCTT: {} microseconds".format(stream.id, stream.WCTT))
 		wctt_sum += stream.WCTT
 		wctts.append(stream.WCTT)
-	print()
-	print("Average WCTT: {} microseconds".format(round(wctt_sum / len(streams), 2)))
-	print("Worst transmission time: {} microseconds".format(max(wctts)))
+
 	logger.info("done.")
 
 	return Results(network, streams, {})

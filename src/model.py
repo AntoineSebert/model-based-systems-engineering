@@ -14,8 +14,8 @@ from networkx import DiGraph  # type: ignore
 @dataclass
 class Device:
 	name: str
-	ingress: Queue[Framelet] = field(default_factory=Queue)
-	egress: Queue[Framelet] = field(default_factory=Queue)
+	ingress: Queue[Framelet] = field(default_factory=Queue) # make into list
+	egress: Queue[Framelet] = field(default_factory=Queue) # make into pqueue
 
 	def __hash__(self: Device) -> int:
 		return hash(self.name)
@@ -38,6 +38,7 @@ class Switch(Device):
 	def emit(self: Switch, network: DiGraph, timeResolution: int) -> None:
 		iterationTime = timeResolution
 		inIteration = 0
+
 		while (inIteration <= iterationTime):
 			if self.egress.empty() and self.currentFrame is None:
 				break
@@ -49,8 +50,7 @@ class Switch(Device):
 				self.currentSpeed = network.get_edge_data(nextStep.src, nextStep.dest)['speed']
 
 				if '$' in nextStep.dest.name:
-					nextStep.dest = next(
-						link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
+					nextStep.dest = next(link.dest for link in self.currentFrame.route.links if link.src == nextStep.dest)
 
 				self.currentReceiver = next(device for device in network._node if device == nextStep.dest)
 
@@ -88,14 +88,15 @@ class EndSystem(Device):
 	currentSpeed: float = 0.0
 	streams: list[Stream] = field(default_factory=list)
 
-	def enqueueStreams(self: EndSystem, network: DiGraph, iteration: int, timeResolution: int, stream) -> None:
+	def enqueueStreams(self: EndSystem, network: DiGraph, iteration: int, timeResolution: int) -> None:
 		index = 0
 
-		for route in stream.routes:
-			index = index + 1
-			self.egress.put(Framelet(index, stream.instance, stream.size, route, stream, iteration * timeResolution))
+		for stream in self.streams:
+			for route in stream.routes:
+				index = index + 1
+				self.egress.put(Framelet(index, stream.instance, stream.size, route, stream, iteration * timeResolution))
 
-		stream.instance += 1
+			stream.instance += 1
 
 	def emit(self: EndSystem, network: DiGraph, timeResolution: int) -> None:
 		iterationTime = timeResolution
@@ -142,11 +143,9 @@ class EndSystem(Device):
 
 			if self != framelet.route.links[-1].dest:
 				self.egress.put(framelet)
-				print(f"{self.name} - {framelet.route.links[-1].dest.name}")
 			else:
-				print("else")
 				transmissionTime = time * timeResolution - framelet.releaseTime
-				print("hzere")
+
 				if framelet.stream.WCTT < (transmissionTime):
 					framelet.stream.WCTT = transmissionTime
 
@@ -419,10 +418,8 @@ class Stream(Sequence):
 	deadline: int
 	rl: int
 	instances: list[StreamInstance] = field(default_factory=list)
-	routes: list[Route] = field(default_factory=list)
+	routes: dict[int, list[Device]] = field(default_factory=list)
 	WCTT: int = 0
-	streamSolution: StreamSolution = object()
-	instance: int = 0
 
 	def __hash__(self: Stream) -> int:
 		return hash(self.id)
@@ -444,18 +441,6 @@ class Stream(Sequence):
 			return self.deadline.__lt__(other.deadline)
 
 		return NotImplemented
-
-	@classmethod
-	def from_elementtree(cls, _stream: Element, network: DiGraph) -> Stream:
-		return Stream(
-			_stream.get("id"),
-			next(node for node in network.nodes if node.name == _stream.get("src")),
-			next(node for node in network.nodes if node.name == _stream.get("dest")),
-			int(_stream.get("size")),
-			int(_stream.get("period")),
-			int(_stream.get("deadline")),
-			int(_stream.get("rl")),
-		)
 
 
 @dataclass

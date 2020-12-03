@@ -7,7 +7,7 @@ from model import EndSystem, InputPort, Link, Route, Stream, Switch
 
 from networkx import DiGraph  # type: ignore
 
-from networkx.algorithms.simple_paths import shortest_simple_paths  # type: ignore
+from networkx.algorithms.connectivity.disjoint_paths import node_disjoint_paths  # type: ignore
 
 
 def get_devices(root: Element, network: DiGraph) -> DiGraph:
@@ -21,35 +21,31 @@ def get_devices(root: Element, network: DiGraph) -> DiGraph:
 
 def create_links(root: Element, network: DiGraph) -> DiGraph:
 	for link in root.iter("link"):
-		src = next(node for node in network.nodes if node.name == link.get("src"))
-		dest = next(node for node in network.nodes if node.name == link.get("dest"))
-
-		network.add_edge(src, dest, speed=float(link.get('speed')))
-
-		# what is this ?
-		counter = 1
-		while network.has_node(InputPort(dest.name + "$PORT" + str(counter))):
-			counter += 1
-		"""
-		intermediateNode = InputPort(dest.name + "$PORT" + str(counter))
-		network.add_edge(src, intermediateNode, speed=float(link.get('speed')))  # src to intermediate node
-		network.add_edge(intermediateNode, dest, speed=0.0)  # intermediate node to dest
-		"""
+		network.add_edge(
+			next(node for node in network.nodes if node.name == link.get("src")),
+			next(node for node in network.nodes if node.name == link.get("dest")),
+			speed=float(link.get('speed'))
+		)
 
 	return network
 
-
-def findStreamSolution(network: DiGraph, stream: Stream) -> list[Route]:
-	paths = list(islice(shortest_simple_paths(network, stream.src, stream.dest, weight='speed'), stream.rl))
-
-	return [Route(i, [Link(path[ii], path[ii + 1]) for ii in range(len(path) - 1)]) for i, path in enumerate(paths)]
-
-
 def create_streams(root: Element, network: DiGraph) -> set[Stream]:
-	streams = {Stream.from_elementtree(stream, network) for stream in root.iter("stream")}
+	streams: set[Stream] = set()
 
-	for stream in streams:
-		stream.routes = findStreamSolution(network, stream)
+	for _stream in root.iter("stream"):
+		stream = Stream(
+			_stream.get("id"),
+			next(node for node in network.nodes if node.name == _stream.get("src")),
+			next(node for node in network.nodes if node.name == _stream.get("dest")),
+			int(_stream.get("size")),
+			int(_stream.get("period")),
+			int(_stream.get("deadline")),
+			int(_stream.get("rl")),
+		)
+		paths = list(islice(node_disjoint_paths(network, stream.src, stream.dest, weight='speed'), stream.rl))
+		stream.routes = [Route(i, [Link(path[ii], path[ii + 1]) for ii in range(len(path) - 1)]) for i, path in enumerate(paths)]
+
+		streams.add(stream)
 
 	return streams
 
@@ -65,7 +61,7 @@ def build(file: Path) -> tuple[DiGraph, set[Stream]]:
 	Returns
 	-------
 	tuple[DiGraph, set[Stream]]
-		A tuple containing the network as a digraph and a set of streams.
+		A tuple containing the network as a DiGraph and a set of streams.
 	"""
 
 	logger = getLogger()
