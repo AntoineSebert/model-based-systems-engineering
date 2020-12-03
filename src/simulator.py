@@ -5,21 +5,21 @@ from model import Device, EndSystem, Framelet, Scheduling, Solution, Stream
 from networkx import DiGraph  # type: ignore
 
 
-def _events(iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream],
+def _events(iteration: int, timeResolution: int, network: DiGraph, streams: set[Stream], scheduling: Scheduling,
 	emitters: set[Device], receivers: set[Device]) -> set[Framelet]:
 	logger = logging.getLogger()
 	misses = set()
 
 	# Check if new framelets should be added to EndSystem queue for emission
-	for device in emitters:
-		device.enqueueStreams(network, iteration, timeResolution)
+	for device in filter(lambda e: isinstance(e, EndSystem), emitters):
+		device.enqueueStreams(iteration, timeResolution)
 
 	# Go through all endsystem and switches in network and emit from egress queue
 	for device in emitters:
 		device.emit(network, timeResolution)
 
 	for device in receivers:
-		misses |= device.receive(network, iteration, timeResolution)
+		misses |= device.receive(iteration, timeResolution)
 
 	for stream in misses:
 		logger.warning(f"Missed deadline for {stream.id} at time {iteration*timeResolution}")
@@ -37,7 +37,7 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 	totalMisses = 0
 
 	while loop_cond(iteration, time_limit):
-		misses = _events(iteration, timeResolution, network, streams, emitters, receivers)
+		misses = _events(iteration, timeResolution, network, streams, scheduling, emitters, receivers)
 		totalMisses += len(misses)
 
 		if len(misses) != 0 and stop_on_miss:

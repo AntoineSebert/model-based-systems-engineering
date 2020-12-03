@@ -22,7 +22,8 @@ class Device:
 	def __eq__(self: Device, other: object) -> bool:
 		if isinstance(other, Device):
 			return self.name == other.name
-		return False
+		else:
+			return NotImplemented
 
 	def emit(self: Device, network: DiGraph, timeResolution: int) -> None:
 		if not self.egress.empty():
@@ -34,9 +35,9 @@ class Device:
 				if self.remainingSize <= 0:
 					self.currentFrame = self.egress.get()
 					self.remainingSize = self.currentFrame.size
-					nextStep = next(link for link in self.currentFrame.route.links if link.src == self.name)
-					self.currentSpeed = network.get_edge_data(Device(nextStep.src), Device(nextStep.dest))['speed']
-					self.currentReceiver = next(device for device in network._node if device == Device(nextStep.dest))
+					nextStep = next(self.currentFrame.route[self])
+					self.currentSpeed = network.get_edge_data(nextStep, nextStep)['speed']
+					self.currentReceiver = next(device for device in network._node if device == nextStep)
 
 				sendable = min(self.remainingSize, max((iterationTime - inIteration) * self.currentSpeed, 1.0))
 
@@ -46,7 +47,6 @@ class Device:
 
 				if self.remainingSize <= 0:
 					self.currentReceiver.ingress.append(self.currentFrame)
-					self.currentFrame = None
 				inIteration += (float(sendable) / self.currentSpeed)
 
 			logging.info(f"Swtich {self.name} emitted framelet")
@@ -54,7 +54,7 @@ class Device:
 
 @dataclass(eq=False)
 class Switch(Device):
-	def receive(self: Switch, network: DiGraph, time: int, timeResolution: int) -> set[Stream]:
+	def receive(self: Switch, time: int, timeResolution: int) -> set[Stream]:
 		misses: set[Stream] = set()
 
 		for framelet in self.ingress:
@@ -71,14 +71,13 @@ class Switch(Device):
 class EndSystem(Device):
 	streams: list[Stream] = field(default_factory=list)
 
-	def enqueueStreams(self: EndSystem, network: DiGraph, iteration: int, timeResolution: int) -> None:
+	def enqueueStreams(self: EndSystem, iteration: int, timeResolution: int) -> None:
 		index = 0
 		for stream in filter(lambda n: not (iteration * timeResolution % n.period), self.streams):
-			for route in stream.routes:
-				index = index + 1
-				self.egress.put(Framelet(index, stream.instance, stream.size, route))
+			route = list(stream.routes.values())[0][0]
+			self.egress.put(Framelet(index, stream.instance, stream.size, route))
 
-	def receive(self: EndSystem, network: DiGraph, time: int, timeResolution: int) -> set[Framelet]:
+	def receive(self: EndSystem, time: int, timeResolution: int) -> set[Framelet]:
 		misses: set[Framelet] = set()
 
 		for framelet in self.ingress:
@@ -98,21 +97,6 @@ class EndSystem(Device):
 		return misses
 
 		logging.info(f"EndSystem {self.name} emitted framelet")
-
-
-@dataclass
-class Link:
-	src: Device
-	dest: Device
-
-	def __hash__(self: Link) -> int:
-		return hash((self.src, self.dest))
-
-	def __eq__(self: Link, other: object) -> bool:
-		if isinstance(other, Link):
-			return self.src is other.src and self.dest is other.dest
-
-		return False
 
 
 @dataclass
@@ -290,7 +274,7 @@ class Stream(Sequence):
 	deadline: int
 	rl: int
 	instances: list[StreamInstance] = field(default_factory=list)
-	routes: dict[int, list[Device]] = field(default_factory=dict)
+	routes: dict[float, list[list[Device]]] = field(default_factory=dict)
 	WCTT: int = 0
 
 	def __hash__(self: Stream) -> int:
