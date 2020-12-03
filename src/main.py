@@ -8,7 +8,7 @@ from output import to_file
 
 from simulator import simulate
 
-from cost import redundancyCheck
+from cost import redundancyCheck, monetaryCost
 
 import cProfile
 
@@ -74,9 +74,10 @@ def main() -> int:
 	for x in redundant:
 		print(x)
 	results = simulate(network, streams, args.time, args.stop)
-	print("Cost of network: ", cost)
 	print()
-	print(results)
+	#print(results)
+	cost = monetaryCost(network)
+	print("Cost of network: ", cost)
 	# to_file(results, args.file)
 
 	exit()
