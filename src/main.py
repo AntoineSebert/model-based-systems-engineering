@@ -8,7 +8,7 @@ from output import to_file
 
 from simulator import simulate
 
-from cost import redundancyCheck
+from cost import redundancyCheck, monetaryCost
 
 import cProfile
 
@@ -69,14 +69,15 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams, solution, cost = build(args.file, args.display_graph)
+	network, streams, solution = build(args.file, args.display_graph)
 	redundant = redundancyCheck(solution)
 	for x in redundant:
 		print(x)
 	results = simulate(network, streams, args.time, args.stop)
-	print("Cost of network: ", cost)
 	print()
-	print(results)
+	#print(results)
+	cost = monetaryCost(network)
+	print("Cost of network: ", cost)
 	# to_file(results, args.file)
 
 	exit()
