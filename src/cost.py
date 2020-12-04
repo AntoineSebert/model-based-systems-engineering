@@ -1,8 +1,8 @@
 from itertools import combinations
 from networkx import DiGraph
-from model import Device, Switch
+from model import Switch
 
-from model import Solution, StreamSolution
+from model import Solution
 
 def redundancyCheck(solution: Solution) -> dict['StreamSolution':bool]:
     '''
@@ -33,7 +33,7 @@ def getCostFromSwitchDegree(degree: int) -> int:
     
     #cost defined by automotive example.xlsx (multiplied by 2 to avoid using floats)
 
-    if (degree > 8):
+    if degree > 8:
         cost = 50 #penalty for exceeding number of allowed external ports
     elif degree == 2:
         cost = 2
@@ -57,7 +57,7 @@ def monetaryCost(network: DiGraph) -> int:
     #nextStep = next(device for device in network. if link.src == self.name)
     cost = 0
     for device in network.nodes:
-        if (isinstance(device, Switch)):
+        if isinstance(device, Switch):
             degree = network.degree(device)
             currCost = getCostFromSwitchDegree(degree)
             print("Switch ", device.name, " has degree ", degree, " with cost ", currCost)
