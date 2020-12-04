@@ -32,18 +32,19 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 	logger = logging.getLogger()
 	timeResolution = 8  # Number of microseconds simulated in a single iteration
 	iteration: int = 0
-	loop_cond = (lambda t, tl: t < tl) if 0 < time_limit else (lambda tl, t: True)
+	loop_cond = (lambda t, tl: t < tl) if time_limit > 0 else (lambda tl, t: True)
 	misses: set[Stream] = set()
 	totalMisses = 0
 
 	while loop_cond(iteration, time_limit):
 		misses = _events(iteration, timeResolution, network, streams, scheduling, emitters, receivers)
-		totalMisses += len(misses)
 
-		if len(misses) != 0 and stop_on_miss:
-			break
+		if misses:
+			totalMisses += len(misses)
+			misses.clear()
 
-		misses.clear()
+			if stop_on_miss:
+				break
 
 		iteration += 1
 
