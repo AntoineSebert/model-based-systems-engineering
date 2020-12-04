@@ -8,7 +8,7 @@ from output import to_file
 
 from simulator import simulate
 
-from cost import redundancyCheck, monetaryCost
+from cost import redundancyCheck, monetaryCost, redundancySatisfiedRatio
 
 import cProfile
 
@@ -79,6 +79,8 @@ def main() -> int:
 	cost = monetaryCost(network)
 	print("Cost of network: ", cost)
 	# to_file(results, args.file)
+	redundancyRatio = redundancySatisfiedRatio(solution)
+
 
 	exit()
 

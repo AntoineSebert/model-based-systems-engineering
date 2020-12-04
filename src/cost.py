@@ -27,6 +27,22 @@ def redundancyCheck(solution: Solution) -> dict['StreamSolution':bool]:
                     redundant[index][0] = False
     return redundant
 
+def redundancySatisfiedRatio(solution: Solution) -> float:
+
+    redundant = redundancyCheck(solution)
+
+    numOfSolutions = len(redundant)
+    numOfSatisfied = 0.0
+
+    for sol in redundant:
+        if sol[0]:
+            numOfSatisfied += 1
+
+    ratio = (numOfSatisfied / numOfSolutions) * 100
+    print("ratio: ", ratio)
+    return ratio
+
+
 def getCostFromSwitchDegree(degree: int) -> int:
 
     cost = 0
