@@ -4,6 +4,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
+from itertools import combinations
 from queue import PriorityQueue
 from typing import overload
 
@@ -339,23 +340,22 @@ class Solution:
 		True if so, False if no.
 		'''
 
-		redundant = [[True, stream] for stream in solution.stream]
+		redundant = [[True, stream] for stream in self.streams]
 
-		for index, stream in enumerate(solution.stream):
-			unique_links = set([link for route in stream.routes for link in route.links])
-			fault_tolerance = int(stream.rl) - 1
-
-			if fault_tolerance > 0:
-				link_combinations = combinations(unique_links, fault_tolerance)
+		for index, stream in enumerate(self.streams):
+			if (fault_tolerance := stream.rl - 1) > 0:
+				link_combinations = combinations(
+					list(zip(route, route[1:]) for route_list in stream.routes.values() for route in route_list), fault_tolerance
+				)
 
 				for comb in link_combinations:
-					if all(bool(set(comb) & set(route.links)) for route in stream.routes):
+					if all(bool(set(comb) & set(zip(route, route[1:]))) for route_list in stream.routes.values() for route in route_list):
 						redundant[index][0] = False
 
 		return redundant
 
-	def redundancySatisfiedRatio(solution: Solution) -> float:
-		redundant = redundancyCheck(solution)
+	def redundancySatisfiedRatio(self: Solution) -> float:
+		redundant = self.redundancyCheck()
 
 		numOfSolutions = len(redundant)
 		numOfSatisfied = 0.0
@@ -368,7 +368,7 @@ class Solution:
 		print("ratio: ", ratio)
 		return ratio
 
-	def getCostFromSwitchDegree(degree: int) -> int:
+	def getCostFromSwitchDegree(self: Solution, degree: int) -> int:
 		cost = 0
 
 		#cost defined by automotive example.xlsx (multiplied by 2 to avoid using floats)
@@ -400,7 +400,7 @@ class Solution:
 		for device in self.network.nodes:
 			if isinstance(device, Switch):
 				degree = self.network.degree(device)
-				currCost = getCostFromSwitchDegree(degree)
+				currCost = self.getCostFromSwitchDegree(degree)
 				print("Switch ", device.name, " has degree ", degree, " with cost ", currCost)
 				cost += currCost
 

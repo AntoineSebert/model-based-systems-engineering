@@ -89,6 +89,10 @@ def main() -> int:
 
 	results = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop)
 
+	results.monetaryCost()
+	results.redundancyCheck()
+	results.redundancySatisfiedRatio()
+
 	# to_file(results, args.file)
 
 	return 0
