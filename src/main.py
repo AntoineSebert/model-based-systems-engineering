@@ -12,6 +12,7 @@ from output import to_file
 
 from simulator import simulate
 
+from cost import redundancyCheck, monetaryCost
 
 def _create_cli_parser() -> ArgumentParser:
 	"""Creates a CLI argument parser and returns it.

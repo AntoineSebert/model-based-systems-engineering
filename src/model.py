@@ -9,7 +9,7 @@ from typing import overload
 
 from networkx import DiGraph  # type: ignore
 
-
+@total_ordering
 @dataclass
 class Device:
 	name: str
@@ -25,31 +25,28 @@ class Device:
 		else:
 			return NotImplemented
 
-	def emit(self: Device, network: DiGraph, timeResolution: int) -> None:
-		if not self.egress.empty():
-			iterationTime = timeResolution
-			inIteration = 0
+    def __lt__(self, other):
+        if isinstance(other, Device):
+            return self.localTime < other.localTime
+        else:
+            RuntimeError(f"Mismatch between device {self=} and other {other=}")
 
-			# figure out what does this bulk do ?
-			while (inIteration <= iterationTime):
-				if self.remainingSize <= 0:
-					self.currentFrame = self.egress.get()
-					self.remainingSize = self.currentFrame.size
-					nextStep = next(self.currentFrame.route[self])
-					self.currentSpeed = network.get_edge_data(nextStep, nextStep)['speed']
-					self.currentReceiver = next(device for device in network._node if device == nextStep)
+    # We always advance time by the guard band!
+    def emit(self, network: DiGraph) -> None:
+        if not self.egress_main.empty():
+            frame = self.egress_main.get()
+            nextStep = next(link for link in frame.route.links if link.src == self.name)
+            speed = network.get_edge_data(Device(nextStep.src), Device(nextStep.dest))['speed']
+            receiver = next(device for device in network._node if device == Device(nextStep.dest))
 
-				sendable = min(self.remainingSize, max((iterationTime - inIteration) * self.currentSpeed, 1.0))
+            # advance time for this device and the frame sent
+            self.localTime += 64.0 / speed
+            frame.localTime = self.localTime
+            receiver.ingress.put(frame) # Send framelet
+        else:
+            self.localTime += 64 / 12.5
 
-				if inIteration + sendable / self.currentSpeed > iterationTime:
-					break
-				self.remainingSize -= sendable
-
-				if self.remainingSize <= 0:
-					self.currentReceiver.ingress.append(self.currentFrame)
-				inIteration += (float(sendable) / self.currentSpeed)
-
-			logging.info(f"Swtich {self.name} emitted framelet")
+        logging.info(f"Swtich {self.name} emitted framelet")
 
 
 @dataclass(eq=False)
@@ -71,33 +68,29 @@ class Switch(Device):
 class EndSystem(Device):
 	streams: list[Stream] = field(default_factory=list)
 
-	def enqueueStreams(self: EndSystem, iteration: int, timeResolution: int) -> None:
-		index = 0
-		for stream in filter(lambda n: not (iteration * timeResolution % n.period), self.streams):
-			route = list(stream.routes.values())[0][0]
-			self.egress.put(Framelet(index, stream.instance, stream.size, route))
-
-	def receive(self: EndSystem, time: int, timeResolution: int) -> set[Framelet]:
-		misses: set[Framelet] = set()
-
-		for framelet in self.ingress:
-			logging.info(f"EndSystem {self.name} received framelet from")
+    def receive(self: EndSystem) -> set['Stream']:
+        misses: set['Stream'] = set()
+        for i in range(self.ingress.qsize()):
+            framelet = self.ingress.get()
+            logging.info(f"EndSystem {self.name} received framelet from")
+            if self.name != framelet.route.links[-1].dest:
+                self.egress_main.put(framelet)  # Queue instead
+            else:  # Check if deadline is passed for frame
+                if framelet.stream_instance.stream.WCTT < framelet.localTime - framelet.stream_instance.release_time:
+                    framelet.stream_instance.stream.WCTT = framelet.localTime - framelet.stream_instance.release_time
+                if framelet.localTime > framelet.stream_instance.local_deadline:
+                    misses.add(framelet.stream_instance.stream)
+        return misses
 
 			if self.name != framelet.route.links[-1].dest:
 				self.egress.put(framelet)
 			else:
 				transmissionTime = time * timeResolution - framelet.releaseTime
 
-				if framelet.stream.WCTT < transmissionTime:
-					framelet.stream.WCTT = transmissionTime
-
-			if framelet.instance.local_deadline < time:
-				misses.add(framelet.instance.stream)
-
-		return misses
-
-		logging.info(f"EndSystem {self.name} emitted framelet")
-
+@dataclass
+class Link:
+    src: str
+    dest: str
 
 @dataclass
 @total_ordering
@@ -230,6 +223,18 @@ class StreamInstance(Sequence):
 		int
 			The subtraction between the length of the sream and the total size of all framelets
 		"""
+    def create_framelets(self):
+        # This puts the frames in order by a route basis. Could be changed to put frames in queue on an index basis
+        for route in self.stream.streamSolution.routes:
+            size = int(self.stream.size)
+            index = 0
+            while (size > 0):
+                if (size < 64):
+                    self.framelets.append(Framelet(index, self, size, self.release_time, route))
+                else:
+                    self.framelets.append(Framelet(index, self, 64, self.release_time, route))
+                size = size - 64
+                index += 1
 
 		return len(self.stream) - sum(framelet.size for framelet in self.framelets)
 
