@@ -15,6 +15,7 @@ class Device:
 	name: str
 	ingress: list[Framelet] = field(default_factory=list)
 	egress: PriorityQueue[Framelet] = field(default_factory=PriorityQueue)
+	localTime: float = 0.0
 
 	def __hash__(self: Device) -> int:
 		return hash(self.name)
@@ -25,41 +26,38 @@ class Device:
 		else:
 			return NotImplemented
 
-    def __lt__(self, other):
-        if isinstance(other, Device):
-            return self.localTime < other.localTime
-        else:
-            RuntimeError(f"Mismatch between device {self=} and other {other=}")
+	def __lt__(self, other):
+		if isinstance(other, Device):
+			return self.localTime < other.localTime
+		else:
+			RuntimeError(f"Mismatch between device {self=} and other {other=}")
 
-    # We always advance time by the guard band!
-    def emit(self, network: DiGraph) -> None:
-        if not self.egress_main.empty():
-            frame = self.egress_main.get()
-            nextStep = next(link for link in frame.route.links if link.src == self.name)
-            speed = network.get_edge_data(Device(nextStep.src), Device(nextStep.dest))['speed']
-            receiver = next(device for device in network._node if device == Device(nextStep.dest))
+	# We always advance time by the guard band!
+	def emit(self, network: DiGraph) -> None:
+		if not self.egress.empty():
+			frame = self.egress.get()
+			nextStep = next(link for link in frame.route.links if link.src == self)
+			speed = network.get_edge_data(nextStep.src, nextStep.dest)['speed']
+			receiver = next(device for device in network._node if device == nextStep.dest)
 
-            # advance time for this device and the frame sent
-            self.localTime += 64.0 / speed
-            frame.localTime = self.localTime
-            receiver.ingress.put(frame) # Send framelet
-        else:
-            self.localTime += 64 / 12.5
+			# advance time for this device and the frame sent
+			self.localTime += 64.0 / speed
+			frame.localTime = self.localTime
+			receiver.ingress.put(frame) # Send framelet
+		else:
+			self.localTime += 64 / 12.5
 
-        logging.info(f"Swtich {self.name} emitted framelet")
+		logging.info(f"Swtich {self.name} emitted framelet")
 
 
 @dataclass(eq=False)
 class Switch(Device):
-	def receive(self: Switch, time: int, timeResolution: int) -> set[Stream]:
+	def receive(self: Switch) -> set[Stream]:
 		misses: set[Stream] = set()
 
 		for framelet in self.ingress:
 			logging.info(f"Switch {self.name} received framelet")
-			self.egress.put(framelet)
-
-			if framelet.instance.local_deadline < time:
-				misses.add(framelet.instance.stream)
+			self.egress.put(framelet)  # Queue instead
 
 		return misses
 
@@ -68,29 +66,23 @@ class Switch(Device):
 class EndSystem(Device):
 	streams: list[Stream] = field(default_factory=list)
 
-    def receive(self: EndSystem) -> set['Stream']:
-        misses: set['Stream'] = set()
-        for i in range(self.ingress.qsize()):
-            framelet = self.ingress.get()
-            logging.info(f"EndSystem {self.name} received framelet from")
-            if self.name != framelet.route.links[-1].dest:
-                self.egress_main.put(framelet)  # Queue instead
-            else:  # Check if deadline is passed for frame
-                if framelet.stream_instance.stream.WCTT < framelet.localTime - framelet.stream_instance.release_time:
-                    framelet.stream_instance.stream.WCTT = framelet.localTime - framelet.stream_instance.release_time
-                if framelet.localTime > framelet.stream_instance.local_deadline:
-                    misses.add(framelet.stream_instance.stream)
-        return misses
+	def receive(self: EndSystem) -> set[Stream]:
+		misses: set[Stream] = set()
+
+		for framelet in self.ingress:
+			logging.info(f"EndSystem {self.name} received framelet from")
 
 			if self.name != framelet.route.links[-1].dest:
-				self.egress.put(framelet)
-			else:
-				transmissionTime = time * timeResolution - framelet.releaseTime
+				self.egress.put(framelet)  # Queue instead
+			else:  # Check if deadline is passed for frame
+				if framelet.stream_instance.stream.WCTT < framelet.localTime - framelet.stream_instance.release_time:
+					framelet.stream_instance.stream.WCTT = framelet.localTime - framelet.stream_instance.release_time
 
-@dataclass
-class Link:
-    src: str
-    dest: str
+				if framelet.localTime > framelet.stream_instance.local_deadline:
+					misses.add(framelet.stream_instance.stream)
+
+		return misses
+
 
 @dataclass
 @total_ordering
@@ -180,6 +172,7 @@ class StreamInstance(Sequence):
 	"""
 
 	stream: Stream
+	release_time: int
 	local_deadline: int
 	framelets: list[Framelet] = field(default_factory=list)
 
@@ -223,20 +216,19 @@ class StreamInstance(Sequence):
 		int
 			The subtraction between the length of the sream and the total size of all framelets
 		"""
-    def create_framelets(self):
-        # This puts the frames in order by a route basis. Could be changed to put frames in queue on an index basis
-        for route in self.stream.streamSolution.routes:
-            size = int(self.stream.size)
-            index = 0
-            while (size > 0):
-                if (size < 64):
-                    self.framelets.append(Framelet(index, self, size, self.release_time, route))
-                else:
-                    self.framelets.append(Framelet(index, self, 64, self.release_time, route))
-                size = size - 64
-                index += 1
 
 		return len(self.stream) - sum(framelet.size for framelet in self.framelets)
+
+	def create_framelets(self: StreamInstance):
+		# This puts the frames in order by a route basis. Could be changed to put frames in queue on an index basis
+		max_framelet_size: int = 64
+
+		for route in self.stream.routes:
+			complete = int(self.stream.size / max_framelet_size)
+			self.framelets.extend(Framelet(i, self, max_framelet_size, route) for i in range(complete))
+
+			if (rest := self.stream.size % max_framelet_size) != 0:
+				self.framelets.append(Framelet(complete, self, rest, route))
 
 
 @dataclass
@@ -265,7 +257,7 @@ class Stream(Sequence):
 		a redundancy level
 	instances : list[StreamInstance]
 		a list of instances
-	routes : dict[int, list[Device]]
+	routes : dict[float, list[list[Device]]]
 		a dict of time cost as key and associated routes as values
 	WCTT : int
 		Worst-case transmission time detected while simulating
@@ -333,6 +325,86 @@ class Solution:
 	def transmission_time(self: Solution) -> tuple[list[int], int]:
 		wctts = [stream.WCTT for stream in self.streams]
 		return wctts, sum(wctts)
+
+	def redundancyCheck(self: Solution) -> dict[Stream, bool]:
+		'''
+
+		Parameters
+		----------
+		solution
+
+		Returns
+		-------
+		A list of stream solutions and a bool for each denoting whether network topology supports the required redundancy level.
+		True if so, False if no.
+		'''
+
+		redundant = [[True, stream] for stream in solution.stream]
+
+		for index, stream in enumerate(solution.stream):
+			unique_links = set([link for route in stream.routes for link in route.links])
+			fault_tolerance = int(stream.rl) - 1
+
+			if fault_tolerance > 0:
+				link_combinations = combinations(unique_links, fault_tolerance)
+
+				for comb in link_combinations:
+					if all(bool(set(comb) & set(route.links)) for route in stream.routes):
+						redundant[index][0] = False
+
+		return redundant
+
+	def redundancySatisfiedRatio(solution: Solution) -> float:
+		redundant = redundancyCheck(solution)
+
+		numOfSolutions = len(redundant)
+		numOfSatisfied = 0.0
+
+		for sol in redundant:
+			if sol[0]:
+				numOfSatisfied += 1
+
+		ratio = (numOfSatisfied / numOfSolutions) * 100 #percentage of satisfied redundancy levels
+		print("ratio: ", ratio)
+		return ratio
+
+	def getCostFromSwitchDegree(degree: int) -> int:
+		cost = 0
+
+		#cost defined by automotive example.xlsx (multiplied by 2 to avoid using floats)
+
+		if degree > 8:
+			cost = 50 * (degree - 8) #penalty for exceeding number of allowed external ports
+		elif degree == 2:
+			cost = 2
+		elif degree == 3:
+			cost = 3
+		elif degree == 4:
+			cost = 5
+		elif degree == 5:
+			cost = 8
+		elif degree == 6:
+			cost = 9
+		elif degree == 8:
+			cost = 11
+		else:
+			print("SWITCH HAS DEGREE ", degree, " which is not allowed")
+			cost = 500
+
+		return cost
+
+	def monetaryCost(self: Solution) -> int:
+		#nextStep = next(device for device in network. if link.src == self.name)
+		cost = 0
+
+		for device in self.network.nodes:
+			if isinstance(device, Switch):
+				degree = self.network.degree(device)
+				currCost = getCostFromSwitchDegree(degree)
+				print("Switch ", device.name, " has degree ", degree, " with cost ", currCost)
+				cost += currCost
+
+		return cost
 
 
 """

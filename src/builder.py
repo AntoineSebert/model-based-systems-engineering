@@ -125,7 +125,7 @@ def _extract_streams(root: Element, network: DiGraph) -> set[Stream]:
 			int(_stream.get("rl")),
 		)
 
-		streams.add(_insert_routes(stream))
+		streams.add(_insert_routes(stream, network))
 
 	return streams
 
@@ -200,7 +200,7 @@ def _schedule_stream_emissions(streams: set[Stream], hyperperiod: int) -> Schedu
 		endsystem_emission: dict[EndSystem, set[StreamInstance]] = defaultdict(set)
 
 		for stream in _streams:
-			endsystem_emission[stream.src].add(StreamInstance(stream, time + stream.deadline))
+			endsystem_emission[stream.src].add(StreamInstance(stream, time, time + stream.deadline))
 
 		stream_emissions[time] = endsystem_emission
 
