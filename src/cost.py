@@ -38,7 +38,7 @@ def redundancySatisfiedRatio(solution: Solution) -> float:
         if sol[0]:
             numOfSatisfied += 1
 
-    ratio = (numOfSatisfied / numOfSolutions) * 100
+    ratio = (numOfSatisfied / numOfSolutions) * 100 #percentage of satisfied redundancy levels
     print("ratio: ", ratio)
     return ratio
 
@@ -50,7 +50,7 @@ def getCostFromSwitchDegree(degree: int) -> int:
     #cost defined by automotive example.xlsx (multiplied by 2 to avoid using floats)
 
     if degree > 8:
-        cost = 50 #penalty for exceeding number of allowed external ports
+        cost = 50 * (degree - 8) #penalty for exceeding number of allowed external ports
     elif degree == 2:
         cost = 2
     elif degree == 3:
@@ -65,7 +65,7 @@ def getCostFromSwitchDegree(degree: int) -> int:
         cost = 11
     else:
         print("SWITCH HAS DEGREE ", degree, " which is not allowed")
-        cost = 50
+        cost = 500
 
     return cost
 
