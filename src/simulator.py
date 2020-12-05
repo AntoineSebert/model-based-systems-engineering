@@ -30,7 +30,6 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 	simulator_age_current, currentDevice = deviceQueue.get()
 
 	while loop_cond(iteration, time_limit):
-		print(iteration)
 		while True:
 			release_time, stream_instance = streamScheduler.get()
 
@@ -74,4 +73,4 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 
 	logger.info("done.")
 
-	return Solution(network, streams, {})
+	return Solution(network, streams)
