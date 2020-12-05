@@ -37,6 +37,10 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 				streamScheduler.put((release_time, stream_instance))
 				break
 
+			# Enqueue stream framelets at device
+			for framelet in stream_instance.framelets:
+				stream_instance.stream.src.egress.put(framelet)
+
 			# Create entirely new stream instance
 			stream_instance = StreamInstance(
 				stream_instance.stream,
