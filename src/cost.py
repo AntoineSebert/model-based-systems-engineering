@@ -34,9 +34,22 @@ def redundancySatisfiedRatio(solution: Solution) -> float:
     numOfSolutions = len(redundant)
     numOfSatisfied = 0.0
 
+    numred = 0
+    numregood = 0
+
     for sol in redundant:
+
+        if sol[1].stream.rl == "2":
+            numred += 1
+
         if sol[0]:
             numOfSatisfied += 1
+            if sol[1].stream.rl == "2":
+                numregood += 1
+        else:
+            print("Stream: ", sol[1].stream.id, " not satisfied ",sol[1].stream.src, " -> " , sol[1].stream.dest)
+
+    print("Number of streams with rl2: ", numred, ", num of stream that satisfy rl2:" , numregood)
 
     ratio = (numOfSatisfied / numOfSolutions) * 100 #percentage of satisfied redundancy levels
     print("ratio: ", ratio)
