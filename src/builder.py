@@ -63,39 +63,6 @@ def _insert_links(root: Element, network: DiGraph) -> DiGraph:
 	return network
 
 
-def _insert_routes(stream: Stream, network: DiGraph) -> Stream:
-	"""Populates the `routes` attributes from a stream with disjoint paths from the network.
-
-	Parameters
-	----------
-	root : Element
-		an XML element containing links
-	network : DiGraph
-		a graph
-
-	Returns
-	-------
-	stream : Stream
-		the stream into which the routes have been populated
-
-	Raises
-	------
-	NetworkXNoPath
-		From `node_disjoint_paths`, if no path from source to target could be found.
-	"""
-
-	for path in list(islice(node_disjoint_paths(network, stream.src, stream.dest), stream.rl)):
-		edges_speed = [network.edges[path[i], path[i + 1]]['speed'] for i in range(len(path) - 2)]
-		ratio = 1 / (sum(edges_speed) / len(edges_speed))
-
-		if ratio in stream.routes:
-			stream.routes[ratio].append(path)
-		else:
-			stream.routes[ratio] = [path]
-
-	return stream
-
-
 def _extract_streams(root: Element, network: DiGraph) -> set[Stream]:
 	"""Creates a set of streams from an XML element.
 
@@ -124,8 +91,9 @@ def _extract_streams(root: Element, network: DiGraph) -> set[Stream]:
 			int(_stream.get("deadline")),
 			int(_stream.get("rl")),
 		)
+		stream.routes = list(islice(node_disjoint_paths(network, stream.src, stream.dest), stream.rl))
 
-		streams.add(_insert_routes(stream, network))
+		streams.add(stream)
 
 	return streams
 
@@ -207,23 +175,6 @@ def _schedule_stream_emissions(streams: set[Stream], hyperperiod: int) -> Schedu
 	return stream_emissions
 
 
-def _get_stream_devices(stream: Stream) -> set[Device]:
-	"""Returns all Devices associated with a stream: source, destination, steps.
-
-	Parameters
-	----------
-	stream : Stream
-		a stream
-
-	Returns
-	-------
-	set[Device]
-		a set of devices involved with a stream
-	"""
-
-	return {device for routes in stream.routes.values() for route in routes for device in route}
-
-
 def _get_emitting_devices(network: DiGraph, streams: set[Stream]) -> set[Device]:
 	"""Returns all the Devices that both:
 	- have at least one outgoing edge
@@ -247,7 +198,7 @@ def _get_emitting_devices(network: DiGraph, streams: set[Stream]) -> set[Device]
 
 	for device in outgoing_devices:
 		for stream in streams:
-			if device in _get_stream_devices(stream):
+			if device in {device for router in stream.routes}:
 				emitting_devices.add(device)
 				break
 
@@ -277,7 +228,7 @@ def _get_receiving_devices(network: DiGraph, streams: set[Stream]) -> set[Device
 
 	for device in ingoing_devices:
 		for stream in streams:
-			if device in _get_stream_devices(stream):
+			if device in {device for router in stream.routes}:
 				receiving_devices.add(device)
 				break
 

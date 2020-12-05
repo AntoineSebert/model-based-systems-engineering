@@ -37,14 +37,21 @@ class Device:
 	def emit(self, network: DiGraph) -> None:
 		if not self.egress.empty():
 			frame = self.egress.get()
-			nextStep = next(link for link in frame.route.links if link.src == self)
-			speed = network.get_edge_data(nextStep.src, nextStep.dest)['speed']
-			receiver = next(device for device in network._node if device == nextStep.dest)
+
+			nextStep = {}
+			print(self.name)
+			for i, device in enumerate(frame.route):
+				print(f"\t{device.name}")
+				if device == self:
+					nextStep = frame.route[i + 1]
+					break
+
+			speed = network.get_edge_data(self, nextStep)['speed']
 
 			# advance time for this device and the frame sent
 			self.localTime += 64.0 / speed
 			frame.localTime = self.localTime
-			receiver.ingress.put(frame) # Send framelet
+			nextStep.ingress.append(frame) # Send framelet
 		else:
 			self.localTime += 64 / 12.5
 
@@ -73,14 +80,14 @@ class EndSystem(Device):
 		for framelet in self.ingress:
 			logging.info(f"EndSystem {self.name} received framelet from")
 
-			if self.name != framelet.route.links[-1].dest:
+			if self != framelet.route[-1]:
 				self.egress.put(framelet)  # Queue instead
 			else:  # Check if deadline is passed for frame
-				if framelet.stream_instance.stream.WCTT < framelet.localTime - framelet.stream_instance.release_time:
-					framelet.stream_instance.stream.WCTT = framelet.localTime - framelet.stream_instance.release_time
+				if framelet.instance.stream.WCTT < framelet.localTime - framelet.instance.release_time:
+					framelet.instance.stream.WCTT = framelet.localTime - framelet.instance.release_time
 
-				if framelet.localTime > framelet.stream_instance.local_deadline:
-					misses.add(framelet.stream_instance.stream)
+				if framelet.localTime > framelet.instance.local_deadline:
+					misses.add(framelet.instance.stream)
 
 		return misses
 
@@ -190,18 +197,12 @@ class StreamInstance(Sequence):
 
 	def __eq__(self: StreamInstance, other: object) -> bool:
 		if isinstance(other, StreamInstance):
-			if self.stream is not other.stream:
-				RuntimeError(f"Stream mismatch between {self=} and {other=}")
-
 			return self.local_deadline.__eq__(other.local_deadline)
 		else:
 			return NotImplemented
 
 	def __lt__(self: StreamInstance, other: object) -> bool:
 		if isinstance(other, StreamInstance):
-			if self.stream is not other.stream:
-				RuntimeError(f"Stream mismatch between {self=} and {other=}")
-
 			return self.local_deadline.__lt__(other.local_deadline)
 		else:
 			return NotImplemented
@@ -258,8 +259,8 @@ class Stream(Sequence):
 		a redundancy level
 	instances : list[StreamInstance]
 		a list of instances
-	routes : dict[float, list[list[Device]]]
-		a dict of time cost as key and associated routes as values
+	routes : list[list[Device]]
+		a list of routes
 	WCTT : int
 		Worst-case transmission time detected while simulating
 	"""
@@ -272,7 +273,7 @@ class Stream(Sequence):
 	deadline: int
 	rl: int
 	instances: list[StreamInstance] = field(default_factory=list)
-	routes: dict[float, list[list[Device]]] = field(default_factory=dict)
+	routes: list[list[Device]] = field(default_factory=list)
 	WCTT: int = 0
 
 	def __hash__(self: Stream) -> int:
@@ -321,7 +322,6 @@ class Solution:
 
 	network: DiGraph
 	streams: set[Stream] = field(default_factory=set)
-	routes: dict[Stream, set[list[Device]]] = field(default_factory=dict)
 
 	def transmission_time(self: Solution) -> tuple[list[int], int]:
 		wctts = [stream.WCTT for stream in self.streams]
@@ -345,11 +345,11 @@ class Solution:
 		for index, stream in enumerate(self.streams):
 			if (fault_tolerance := stream.rl - 1) > 0:
 				link_combinations = combinations(
-					list(zip(route, route[1:]) for route_list in stream.routes.values() for route in route_list), fault_tolerance
+					list(zip(route, route[1:]) for route in stream.routes), fault_tolerance
 				)
 
 				for comb in link_combinations:
-					if all(bool(set(comb) & set(zip(route, route[1:]))) for route_list in stream.routes.values() for route in route_list):
+					if all(bool(set(comb) & set(zip(route, route[1:]))) for route in stream.routes):
 						redundant[index][0] = False
 
 		return redundant

@@ -30,8 +30,10 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 	simulator_age_current, currentDevice = deviceQueue.get()
 
 	while loop_cond(iteration, time_limit):
+		print(iteration)
 		while True:
 			release_time, stream_instance = streamScheduler.get()
+
 			if release_time > simulator_age_current:
 				# Put stream instance back. We cannot enqueue it yet
 				streamScheduler.put((release_time, stream_instance))
@@ -65,6 +67,7 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 		if simulator_age_current > simulator_age_last:
 			for device in network.nodes:
 				device.receive()
+
 		simulator_age_last = simulator_age_current
 
 		iteration += 1
