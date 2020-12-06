@@ -39,9 +39,7 @@ class Device:
 			frame = self.egress.get()
 
 			nextStep = {}
-			print(self.name)
 			for i, device in enumerate(frame.route):
-				print(f"\t{device.name}")
 				if device == self:
 					nextStep = frame.route[i + 1]
 					break
@@ -221,7 +219,7 @@ class StreamInstance(Sequence):
 
 		return len(self.stream) - sum(framelet.size for framelet in self.framelets)
 
-	def create_framelets(self: StreamInstance):
+	def create_framelets(self: StreamInstance) -> list[Framelet]:
 		# This puts the frames in order by a route basis. Could be changed to put frames in queue on an index basis
 		max_framelet_size: int = 64
 
@@ -231,6 +229,8 @@ class StreamInstance(Sequence):
 
 			if (rest := self.stream.size % max_framelet_size) != 0:
 				self.framelets.append(Framelet(complete, self, rest, route))
+
+		return self.framelets
 
 
 @dataclass
@@ -405,13 +405,3 @@ class Solution:
 				cost += currCost
 
 		return cost
-
-
-"""
-The structure is:
-- key: emission time, hyperperiod-wise
-- value : dict
-	- key : emitting device
-	- value : set of streams to emit by said device
-"""
-Scheduling = dict[int, dict[EndSystem, set[StreamInstance]]]

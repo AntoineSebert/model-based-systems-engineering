@@ -1,55 +1,53 @@
 import logging
 
-from model import Device, EndSystem, Framelet, Scheduling, Solution, Stream, StreamInstance
+from model import Device, EndSystem, Framelet, Solution, Stream, StreamInstance
 
 from networkx import DiGraph  # type: ignore
 
 from queue import PriorityQueue
 
+from typing import Optional
 
-def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emitters: set[Device],
+
+def _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current) -> Optional[tuple[int, set[Stream]]]:
+	if sched_current[0] <= simulator_age_current:
+		return sched_current
+
+		try:
+			sched_current = next(scheduler_it)
+		except StopIteration:
+			scheduler_it = iter(scheduling.items())
+			sched_current = next(scheduler_it)
+	else:
+		return None
+
+
+def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[Stream]], emitters: set[Device],
 	receivers: set[Device], time_limit: int, stop_on_miss: bool) -> Solution:
 	logger = logging.getLogger()
 	iteration: int = 0
-	loop_cond = (lambda t, tl: t < tl) if time_limit > 0 else (lambda tl, t: True)
 	misses: set[Stream] = set()
-	totalMisses = 0
 	simulator_age_current = 0
 	simulator_age_last = simulator_age_current
+	scheduler_it = iter(scheduling.items())
+	sched_current = next(scheduler_it)
 
 	deviceQueue = PriorityQueue()
 	for device in network.nodes:
 		deviceQueue.put((device.localTime, device))
 
-	streamScheduler = PriorityQueue()
-	for stream in streams:
-		stream_instance = StreamInstance(stream, simulator_age_current, 0 * stream.period + stream.deadline)
-		stream_instance.create_framelets()
-		streamScheduler.put((stream_instance.release_time, stream_instance))
-
 	simulator_age_current, currentDevice = deviceQueue.get()
 
+	loop_cond = (lambda t, tl: t < tl) if time_limit > 0 else (lambda tl, t: True)
+
 	while loop_cond(iteration, time_limit):
-		while True:
-			release_time, stream_instance = streamScheduler.get()
+		if (time_and_streams := _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current)) is not None:
+			for stream in time_and_streams[1]:
+				instance = StreamInstance(stream, time_and_streams[0] + stream.period, time_and_streams[0] + stream.period + stream.deadline)
 
-			if release_time > simulator_age_current:
-				# Put stream instance back. We cannot enqueue it yet
-				streamScheduler.put((release_time, stream_instance))
-				break
-
-			# Enqueue stream framelets at device
-			for framelet in stream_instance.framelets:
-				stream_instance.stream.src.egress.put(framelet)
-
-			# Create entirely new stream instance
-			stream_instance = StreamInstance(
-				stream_instance.stream,
-				stream_instance.release_time + stream_instance.stream.period,
-				stream_instance.release_time + stream_instance.stream.period + stream_instance.stream.deadline
-			)
-			stream_instance.create_framelets()
-			streamScheduler.put((stream_instance.release_time, stream_instance))
+				# Enqueue stream framelets at device
+				for framelet in instance.create_framelets():
+					stream.src.egress.put(framelet)
 
 		# Perform receive and emit for the device
 		currentDevice.emit(network)  # Emit next framelet

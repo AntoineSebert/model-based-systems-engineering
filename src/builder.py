@@ -5,7 +5,7 @@ from math import lcm
 from pathlib import Path
 from xml.etree.ElementTree import Element, dump, indent, parse
 
-from model import Device, EndSystem, Scheduling, Stream, StreamInstance, Switch
+from model import Device, EndSystem, Stream, StreamInstance, Switch
 
 from networkx import DiGraph  # type: ignore
 from networkx.algorithms.connectivity.disjoint_paths import node_disjoint_paths  # type: ignore
@@ -115,7 +115,7 @@ def _compute_hyperperiod(streams: set[Stream]) -> int:
 	return lcm(*{stream.period for stream in streams})
 
 
-def _get_emission_times(streams: set[Stream], hyperperiod: int) -> dict[int, set[Stream]]:
+def _schedule_stream_instantiations(streams: set[Stream], hyperperiod: int) -> dict[int, set[Stream]]:
 	"""Associates a time to a set of streams for emission.
 	If for example we have the entry '(50, {stream0, stream3})', it means that the streams 'stream0' and 'stream3' are
 	to be emitted at time 50, hyperperiod-wise.
@@ -143,36 +143,6 @@ def _get_emission_times(streams: set[Stream], hyperperiod: int) -> dict[int, set
 			emission_times[time].add(stream)
 
 	return emission_times
-
-
-def _schedule_stream_emissions(streams: set[Stream], hyperperiod: int) -> Scheduling:
-	"""Stream emission static scheduling. Check Model.Scheduling for more info.
-
-	Parameters
-	----------
-	streams : set[Stream]
-		Streams to schedule.
-	hyperperiod : int
-		an hyperperiod
-
-	Returns
-	-------
-	stream_emissions : Scheduling
-		A scheduling from the streams based on emission times and emitting devices.
-	"""
-
-	emission_times = _get_emission_times(streams, hyperperiod)
-	stream_emissions: dict[int, dict[EndSystem, set[StreamInstance]]] = {}
-
-	for time, _streams in emission_times.items():
-		endsystem_emission: dict[EndSystem, set[StreamInstance]] = defaultdict(set)
-
-		for stream in _streams:
-			endsystem_emission[stream.src].add(StreamInstance(stream, time, time + stream.deadline))
-
-		stream_emissions[time] = endsystem_emission
-
-	return stream_emissions
 
 
 def _get_emitting_devices(network: DiGraph, streams: set[Stream]) -> set[Device]:
@@ -235,7 +205,7 @@ def _get_receiving_devices(network: DiGraph, streams: set[Stream]) -> set[Device
 	return receiving_devices
 
 
-def build(file: Path) -> tuple[DiGraph, set[Stream], Scheduling, set[Device], set[Device]]:
+def build(file: Path) -> tuple[DiGraph, set[Stream], dict[int, set[Stream]], set[Device], set[Device]]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Constraints
@@ -264,8 +234,8 @@ def build(file: Path) -> tuple[DiGraph, set[Stream], Scheduling, set[Device], se
 	network = _insert_links(root, _insert_devices(root, DiGraph()))
 	streams = _extract_streams(root, network)
 	hyperperiod = _compute_hyperperiod(streams)
-	stream_emissions = _schedule_stream_emissions(streams, hyperperiod)
+	stream_instantiations = _schedule_stream_instantiations(streams, hyperperiod)
 
 	logger.info("done.")
 
-	return network, streams, stream_emissions, _get_emitting_devices(network, streams), _get_receiving_devices(network, streams)
+	return network, streams, stream_instantiations, _get_emitting_devices(network, streams), _get_receiving_devices(network, streams)
