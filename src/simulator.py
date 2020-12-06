@@ -32,6 +32,9 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	scheduler_it = iter(scheduling.items())
 	sched_current = next(scheduler_it)
 
+	for time, streams in scheduling.items():
+		print(time, len(streams))
+
 	deviceQueue = PriorityQueue()
 	for device in network.nodes:
 		deviceQueue.put((device.localTime, device))
@@ -44,7 +47,8 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 		if (time_and_streams := _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current, hyperperiod)) is not None:
 			sched_current = time_and_streams
 			for stream in time_and_streams[1]:
-				instance = StreamInstance(stream, time_and_streams[0] + stream.period, time_and_streams[0] + stream.period + stream.deadline)
+				print(f"{time_and_streams[0]}-{-stream.period}")
+				instance = StreamInstance(stream, time_and_streams[0], time_and_streams[0] + stream.deadline)
 
 				# Enqueue stream framelets at device
 				for framelet in instance.create_framelets():
