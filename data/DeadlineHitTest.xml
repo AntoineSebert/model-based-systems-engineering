@@ -18,6 +18,6 @@
     <link src="SW4" dest="CTRL2" speed="12.5"/>
 
     <!-- times in us -->
-    <stream id="Stream00" src="FRONT_CAM_1" dest="CTRL1" size="64" period="1000" deadline="10" rl="1"/>
+    <stream id="Stream00" src="FRONT_CAM_1" dest="CTRL1" size="64" period="1000" deadline="10" rl="2"/>
     <stream id="Stream01" src="FRONT_CAM_2" dest="CTRL2" size="64" period="500" deadline="12" rl="1"/>
 </NetworkDescription>
