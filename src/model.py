@@ -4,7 +4,7 @@ import logging
 from collections.abc import Sequence
 from dataclasses import dataclass, field
 from functools import total_ordering
-from itertools import combinations
+from itertools import combinations, chain
 from queue import PriorityQueue
 from typing import overload
 
@@ -345,10 +345,10 @@ class Solution:
 		redundant = [[True, stream] for stream in self.streams]
 
 		for index, stream in enumerate(self.streams):
-			if (fault_tolerance := stream.rl - 1) > 0:
-				link_combinations = combinations(
-					list(zip(route, route[1:]) for route in stream.routes), fault_tolerance
-				)
+			if (fault_tolerance := stream.rl - 1) > 0: # change to stream.rl - 1
+
+				unique_links = list(chain.from_iterable(list(list(zip(route, route[1:])) for route in stream.routes)))
+				link_combinations = list(combinations(unique_links, fault_tolerance))
 
 				for comb in link_combinations:
 					if all(bool(set(comb) & set(zip(route, route[1:]))) for route in stream.routes):
@@ -396,7 +396,6 @@ class Solution:
 		return cost
 
 	def monetaryCost(self: Solution) -> int:
-		#nextStep = next(device for device in network. if link.src == self.name)
 		cost = 0
 
 		for device in self.network.nodes:
