@@ -26,6 +26,7 @@ def _add_streams(network_desc: Element, results: Solution) -> Element:
 			"period": str(stream.period),
 			"deadline": str(stream.deadline),
 			"rl": str(stream.rl),
+			"wctt": str(stream.WCTT),
 		})
 
 		for instance in stream.instances:
@@ -79,7 +80,7 @@ def to_file(results: Solution, file: Path) -> Path:
 
 	logger.info(f"Writing the best results into '{filepath.name}'...")
 
-	network_desc = Element("NetworkDescription")
+	network_desc = Element("NetworkDescription", {"cost": str(results.monetaryCost())})
 
 	for node in results.network:
 		SubElement(network_desc, "device", {"name": node.name, "type": node.__class__.__name__})
@@ -87,13 +88,17 @@ def to_file(results: Solution, file: Path) -> Path:
 	for u, v, speed in results.network.edges(data="speed"):
 		SubElement(network_desc, "link", {"src": u.name, "dest": v.name, "speed": str(speed)})
 
+	for time, streams in results.misses.items():
+		miss = SubElement(network_desc, "miss", {"time": str(time)})
+
+		for stream in streams:
+			SubElement(miss, "stream", {"id": stream.id})
+
 	network_desc = _add_streams(network_desc, results)
 
 	root = ElementTree(network_desc)
 	indent(root, space="\t")
 	root.write(filepath, encoding='utf-8', xml_declaration=True)
-
-	# add metadata (cost function + worst case transmission time)
 
 	logger.info("done.")
 

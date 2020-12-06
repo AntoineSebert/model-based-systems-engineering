@@ -23,7 +23,7 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	receivers: set[Device], time_limit: int, stop_on_miss: bool, hyperperiod: int) -> Solution:
 	logger = logging.getLogger()
 	iteration: int = 0
-	misses: set[Stream] = set()
+	misses: dict[float, set[Stream]] = {}
 	simulator_age_current = 0.0
 	simulator_age_last = simulator_age_current
 	scheduler_it = iter(scheduling.items())
@@ -84,7 +84,12 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 		simulator_age_current, currentDevice = deviceQueue.get()
 		if simulator_age_current > simulator_age_last:
 			for device in network.nodes:
-				device.receive()
+				if isinstance(device, EndSystem):
+					new_misses = device.receive()
+					if new_misses:
+						misses[simulator_age_current] = new_misses
+				else:
+					device.receive()
 
 		simulator_age_last = simulator_age_current
 
@@ -92,4 +97,4 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 
 	logger.info("done.")
 
-	return Solution(network, streams), simulator_age_current
+	return Solution(network, streams, misses), simulator_age_current

@@ -67,6 +67,7 @@ class Switch(Device):
 			logging.info(f"Switch {self.name} received framelet")
 			self.egress.put(framelet)  # Queue instead
 		self.ingress.clear()
+
 		return misses
 
 
@@ -324,6 +325,7 @@ class Solution:
 
 	network: DiGraph
 	streams: set[Stream] = field(default_factory=set)
+	misses: dict[float, set[Stream]] = field(default_factory=dict)
 
 	def transmission_time(self: Solution) -> tuple[list[int], int]:
 		wctts = [stream.WCTT for stream in self.streams]

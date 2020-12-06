@@ -1,0 +1,23 @@
+<NetworkDescription>
+    <!-- Expected order: devices, links, streams-->
+    <device name="FRONT_CAM_1" type="EndSystem"/>
+    <device name="FRONT_CAM_2" type="EndSystem"/>
+    <device name="SW1" type="Switch"/>
+    <device name="SW2" type="Switch"/>
+    <device name="SW3" type="Switch"/>
+    <device name="SW4" type="Switch"/>
+    <device name="CTRL1" type="EndSystem"/>
+    <device name="CTRL2" type="EndSystem"/>
+    <!-- Links are directional-->
+    <!-- speed = bytes/us-->
+    <link src="FRONT_CAM_1" dest="SW1" speed="12.5"/>
+    <link src="SW1" dest="SW2" speed="12.5"/>
+    <link src="SW2" dest="CTRL1" speed="12.5"/>
+    <link src="FRONT_CAM_2" dest="SW3" speed="12.5"/>
+    <link src="SW3" dest="SW4" speed="12.5"/>
+    <link src="SW4" dest="CTRL2" speed="12.5"/>
+
+    <!-- times in us -->
+    <stream id="Stream00" src="FRONT_CAM_1" dest="CTRL1" size="64" period="1000" deadline="10" rl="1"/>
+    <stream id="Stream01" src="FRONT_CAM_2" dest="CTRL2" size="64" period="500" deadline="12" rl="1"/>
+</NetworkDescription>
