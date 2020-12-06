@@ -81,12 +81,25 @@ def to_file(results: Solution, file: Path) -> Path:
 	logger.info(f"Writing the best results into '{filepath.name}'...")
 
 	network_desc = Element("NetworkDescription", {"cost": str(results.monetaryCost()), "Redundancy_Ratio":str(results.redundancySatisfiedRatio()), "Deadlines_missed":"Yes" if len(results.misses) > 0 else "No"})
+	worst_wctt = list(results.streams)[0].WCTT
+	average_wctt = 0
+	for stream in results.streams:
+		if stream.WCTT > worst_wctt:
+			worst_wctt = stream.WCTT
+		average_wctt += stream.WCTT
+	average_wctt = average_wctt / len(results.streams)
+
+	SubElement(network_desc, "Worst_WCTT", {"Time": str(worst_wctt), "Unit": "Microseconds"})
+	SubElement(network_desc, "Average_WCTT", {"Time": str(average_wctt), "Unit": "Microseconds"})
 
 	for node in results.network:
 		SubElement(network_desc, "device", {"name": node.name, "type": node.__class__.__name__})
 
 	for u, v, speed in results.network.edges(data="speed"):
 		SubElement(network_desc, "link", {"src": u.name, "dest": v.name, "speed": str(speed)})
+
+	for stream in results.streams:
+		SubElement(network_desc, "stream_times", {"id": stream.id, "WCTT" : str(stream.WCTT)})
 
 	for time, streams in results.misses.items():
 		miss = SubElement(network_desc, "miss", {"time": str(time)})
