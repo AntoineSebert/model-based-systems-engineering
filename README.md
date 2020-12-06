@@ -1,4 +1,4 @@
-# Simulation of ADAS interconnection network
+# Time-Sensitive Networking simulation for Advanced Driver Assistance Systems
 
 ## Motivation
 
