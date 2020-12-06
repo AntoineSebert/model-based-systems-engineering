@@ -39,7 +39,9 @@ class Device:
 			frame = self.egress.get()
 
 			nextStep = {}
+			# print(self.name)
 			for i, device in enumerate(frame.route):
+				# (f"\t{device.name}")
 				if device == self:
 					nextStep = frame.route[i + 1]
 					break
@@ -64,7 +66,7 @@ class Switch(Device):
 		for framelet in self.ingress:
 			logging.info(f"Switch {self.name} received framelet")
 			self.egress.put(framelet)  # Queue instead
-
+		self.ingress.clear()
 		return misses
 
 
@@ -86,7 +88,7 @@ class EndSystem(Device):
 
 				if framelet.localTime > framelet.instance.local_deadline:
 					misses.add(framelet.instance.stream)
-
+		self.ingress.clear()
 		return misses
 
 

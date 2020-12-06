@@ -72,4 +72,4 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 
 	logger.info("done.")
 
-	return Solution(network, streams)
+	return Solution(network, streams), simulator_age_current
