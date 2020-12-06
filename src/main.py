@@ -89,11 +89,11 @@ def main() -> int:
 	if args.display_graph:
 		display_graph(network)
 
-	results = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop, hyperperiod)
+	results, simulator_age = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop, hyperperiod)
 
-	results[0].monetaryCost()
-	results[0].redundancyCheck()
-	results[0].redundancySatisfiedRatio()
+	results.monetaryCost()
+	results.redundancyCheck()
+	results.redundancySatisfiedRatio()
 	print("Simulated network traffic for {} microseconds".format(simulator_age))
 
 	#to_file(results, args.file)
