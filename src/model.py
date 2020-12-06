@@ -130,7 +130,7 @@ class Framelet:
 
 	def __lt__(self: Framelet, other: object) -> bool:
 		if isinstance(other, Framelet):
-			return self.instance.stream.rl.__lt__(other.instance.stream.rl)
+			return self.instance.stream.rl.__gt__(other.instance.stream.rl)
 		else:
 			return NotImplemented
 
