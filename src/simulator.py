@@ -45,6 +45,7 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 			sched_current = time_and_streams
 			for stream in time_and_streams[1]:
 				instance = StreamInstance(stream, time_and_streams[0], time_and_streams[0] + stream.deadline)
+				stream.instances.append(instance)
 
 				# Enqueue stream framelets at device
 				for framelet in instance.create_framelets():

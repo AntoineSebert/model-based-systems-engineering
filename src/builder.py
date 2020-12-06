@@ -142,7 +142,7 @@ def _schedule_stream_instantiations(streams: set[Stream], hyperperiod: int) -> d
 		for time in times:
 			emission_times[time].add(stream)
 
-	return emission_times
+	return {time: streams for time, streams in sorted(emission_times.items())}
 
 
 def _get_emitting_devices(network: DiGraph, streams: set[Stream]) -> set[Device]:
