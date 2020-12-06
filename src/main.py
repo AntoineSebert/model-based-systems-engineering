@@ -12,6 +12,8 @@ from output import to_file
 
 from simulator import simulate
 
+from cProfile import run
+
 
 def _create_cli_parser() -> ArgumentParser:
 	"""Creates a CLI argument parser and returns it.
@@ -87,11 +89,12 @@ def main() -> int:
 	if args.display_graph:
 		display_graph(network)
 
-	results = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop)
+	results, simulator_age = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop)
 
 	results.monetaryCost()
 	results.redundancyCheck()
 	results.redundancySatisfiedRatio()
+	print("Simulated network traffic for {} microseconds".format(simulator_age))
 
 	# to_file(results, args.file)
 
@@ -100,3 +103,4 @@ def main() -> int:
 
 if __name__ == "__main__":
 	main()
+	# run('main()')

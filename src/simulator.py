@@ -23,7 +23,7 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 
 	streamScheduler = PriorityQueue()
 	for stream in streams:
-		stream_instance = StreamInstance(stream, simulator_age_current, 0 * stream.period + stream.deadline)
+		stream_instance = StreamInstance(stream, simulator_age_current, stream.deadline)
 		stream_instance.create_framelets()
 		streamScheduler.put((stream_instance.release_time, stream_instance))
 
@@ -31,12 +31,13 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 
 	while loop_cond(iteration, time_limit):
 		while True:
-			release_time, stream_instance = streamScheduler.get()
+			# Most of the time this check is gonna turn out false. So it is worth only peeking
+			release_time, stream_instance = streamScheduler.queue[0]
 
 			if release_time > simulator_age_current:
-				# Put stream instance back. We cannot enqueue it yet
-				streamScheduler.put((release_time, stream_instance))
 				break
+			else:
+				release_time, stream_instance = streamScheduler.get()
 
 			# Enqueue stream framelets at device
 			for framelet in stream_instance.framelets:
@@ -52,6 +53,8 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 			streamScheduler.put((stream_instance.release_time, stream_instance))
 
 		# Perform receive and emit for the device
+		if currentDevice.name == "SW1":
+			device_check = currentDevice
 		currentDevice.emit(network)  # Emit next framelet
 
 		if misses and stop_on_miss:
@@ -73,4 +76,4 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: Scheduling, emi
 
 	logger.info("done.")
 
-	return Solution(network, streams)
+	return Solution(network, streams), simulator_age_current
