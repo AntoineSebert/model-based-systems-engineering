@@ -96,7 +96,7 @@ def main() -> int:
 	results.redundancySatisfiedRatio()
 	print("Simulated network traffic for {} microseconds".format(simulator_age))
 
-	#to_file(results, args.file)
+	to_file(results, args.file)
 
 	return 0
 

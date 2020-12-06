@@ -20,8 +20,8 @@ def _add_streams(network_desc: Element, results: Solution) -> None:
 	for stream in results.streams:
 		stream_element = SubElement(network_desc, "stream", {
 			"id": str(stream.id),
-			"src": stream.src,
-			"dest": stream.dest,
+			"src": stream.src.name,
+			"dest": stream.dest.name,
 			"size": str(stream.size),
 			"period": str(stream.period),
 			"deadline": str(stream.deadline),
@@ -83,7 +83,7 @@ def to_file(results: Solution, file: Path) -> Path:
 		SubElement(network_desc, "device", {"name": node.name, "type": node.__class__.__name__})
 
 	for u, v, speed in results.network.edges(data="speed"):
-		SubElement(network_desc, "link", {"src": u.name, "dest": v.name, "speed": speed})
+		SubElement(network_desc, "link", {"src": u.name, "dest": v.name, "speed": str(speed)})
 
 	_add_streams(network_desc, results)
 
