@@ -101,5 +101,5 @@ def main() -> int:
 
 
 if __name__ == "__main__":
-	main()
-	# run('main()')
+	# main()
+	run('main()')

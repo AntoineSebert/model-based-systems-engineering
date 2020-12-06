@@ -9,9 +9,9 @@ from queue import PriorityQueue
 from typing import Optional
 
 
-def enqueue_streams(sched_current):
+def enqueue_streams(sched_current, simulator_age):
 	for stream in sched_current[1]:
-		instance = StreamInstance(stream, sched_current[0], sched_current[0] + stream.deadline)
+		instance = StreamInstance(stream, simulator_age, simulator_age + stream.deadline)
 		stream.instances.append(instance)
 
 		# Enqueue stream framelets at device
@@ -27,6 +27,20 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	simulator_age_current = 0.0
 	simulator_age_last = simulator_age_current
 	scheduler_it = iter(scheduling.items())
+
+	# Check edge case for all stream periods being equal
+	periods_equal = True
+	period = 0
+	period = next(scheduler_it)[0]
+	try:
+		for sched in scheduler_it:
+			if sched[0] != period:
+				periods_equal = False
+				break
+	except:
+		pass
+
+	scheduler_it = iter(scheduling.items())
 	sched_current = next(scheduler_it)
 
 	deviceQueue = PriorityQueue()
@@ -38,8 +52,11 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	loop_cond = (lambda t, tl: t < tl) if time_limit > 0 else (lambda tl, t: True)
 
 	while loop_cond(iteration, time_limit):
-		if sched_current[0] <= simulator_age_current % hyperperiod:
-			enqueue_streams(sched_current)
+		if periods_equal and simulator_age_current >= period:
+			enqueue_streams(sched_current, simulator_age_current)
+			period += list(sched_current[1])[0].period
+		elif not periods_equal and sched_current[0] <= simulator_age_current % hyperperiod:
+			enqueue_streams(sched_current, simulator_age_current)
 			try:
 				sched_current = next(scheduler_it)
 			except StopIteration:
