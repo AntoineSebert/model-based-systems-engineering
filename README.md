@@ -43,8 +43,13 @@ Note: The network description files are typically stored in `/data/`, but it is 
 ## Authors
 
 Casper Egholm Jørgensen s163950
+
 Danial Virk s193167
+
 Lawrence Egyir s160146
+
 Óli Kárason Mikkelsen s174269
+
 Saadman Haq s160081
+
 Antoine Louis Thibaut Sébert s193508
