@@ -80,7 +80,7 @@ def to_file(results: Solution, file: Path) -> Path:
 
 	logger.info(f"Writing the best results into '{filepath.name}'...")
 
-	network_desc = Element("NetworkDescription", {"cost": str(results.monetaryCost()), "Redundancy Ratio":str(results.redundancySatisfiedRatio())})
+	network_desc = Element("NetworkDescription", {"cost": str(results.monetaryCost()), "Redundancy_Ratio":str(results.redundancySatisfiedRatio()), "Deadlines_missed":"Yes" if len(results.misses) > 0 else "No"})
 
 	for node in results.network:
 		SubElement(network_desc, "device", {"name": node.name, "type": node.__class__.__name__})
