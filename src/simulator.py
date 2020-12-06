@@ -43,6 +43,13 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	scheduler_it = iter(scheduling.items())
 	sched_current = next(scheduler_it)
 
+	"""
+	for time, streams in scheduling.items():
+		print(time)
+		for stream in streams:
+			print(f"\t{stream.id}")
+	"""
+
 	deviceQueue = PriorityQueue()
 	for device in network.nodes:
 		deviceQueue.put((device.localTime, device))

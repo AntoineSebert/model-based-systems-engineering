@@ -6,7 +6,7 @@ from xml.etree.ElementTree import Element, ElementTree, SubElement, indent
 from model import Solution
 
 
-def _add_streams(network_desc: Element, results: Solution) -> None:
+def _add_streams(network_desc: Element, results: Solution) -> Element:
 	"""Add the streams and their descendants into an XML element.
 
 	Parameters
@@ -33,6 +33,8 @@ def _add_streams(network_desc: Element, results: Solution) -> None:
 
 			for framelet in instance.framelets:
 				SubElement(instance_element, "framelet", {"id": str(framelet.id), "size": str(framelet.size)})
+
+	return network_desc
 
 
 def _create_filepath(file: Path) -> Path:
@@ -85,7 +87,7 @@ def to_file(results: Solution, file: Path) -> Path:
 	for u, v, speed in results.network.edges(data="speed"):
 		SubElement(network_desc, "link", {"src": u.name, "dest": v.name, "speed": str(speed)})
 
-	_add_streams(network_desc, results)
+	network_desc = _add_streams(network_desc, results)
 
 	root = ElementTree(network_desc)
 	indent(root, space="\t")
