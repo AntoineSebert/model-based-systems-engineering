@@ -9,17 +9,14 @@ from queue import PriorityQueue
 from typing import Optional
 
 
-def _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current, hyperperiod) -> Optional[tuple[int, set[Stream]]]:
-	if sched_current[0] <= simulator_age_current % hyperperiod:
-		try:
-			sched_current = next(scheduler_it)
-		except StopIteration:
-			scheduler_it = iter(scheduling.items())
-			sched_current = next(scheduler_it)
+def enqueue_streams(sched_current):
+	for stream in sched_current[1]:
+		instance = StreamInstance(stream, sched_current[0], sched_current[0] + stream.deadline)
+		stream.instances.append(instance)
 
-		return sched_current
-	else:
-		return None
+		# Enqueue stream framelets at device
+		for framelet in instance.create_framelets():
+			stream.src.egress.put(framelet)
 
 
 def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[Stream]], emitters: set[Device],
@@ -41,15 +38,13 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	loop_cond = (lambda t, tl: t < tl) if time_limit > 0 else (lambda tl, t: True)
 
 	while loop_cond(iteration, time_limit):
-		if (time_and_streams := _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current, hyperperiod)) is not None:
-			sched_current = time_and_streams
-			for stream in time_and_streams[1]:
-				instance = StreamInstance(stream, time_and_streams[0], time_and_streams[0] + stream.deadline)
-				stream.instances.append(instance)
-
-				# Enqueue stream framelets at device
-				for framelet in instance.create_framelets():
-					stream.src.egress.put(framelet)
+		if sched_current[0] <= simulator_age_current % hyperperiod:
+			enqueue_streams(sched_current)
+			try:
+				sched_current = next(scheduler_it)
+			except StopIteration:
+				scheduler_it = iter(scheduling.items())
+				sched_current = next(scheduler_it)
 
 		# Perform receive and emit for the device
 		currentDevice.emit(network)  # Emit next framelet
