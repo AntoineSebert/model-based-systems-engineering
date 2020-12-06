@@ -205,7 +205,7 @@ def _get_receiving_devices(network: DiGraph, streams: set[Stream]) -> set[Device
 	return receiving_devices
 
 
-def build(file: Path) -> tuple[DiGraph, set[Stream], dict[int, set[Stream]], set[Device], set[Device]]:
+def build(file: Path) -> tuple[DiGraph, set[Stream], dict[int, set[Stream]], set[Device], set[Device], int]:
 	"""Prints the input file, builds the network and the streams, draws the graph and return the data.
 
 	Constraints
@@ -238,4 +238,4 @@ def build(file: Path) -> tuple[DiGraph, set[Stream], dict[int, set[Stream]], set
 
 	logger.info("done.")
 
-	return network, streams, stream_instantiations, _get_emitting_devices(network, streams), _get_receiving_devices(network, streams)
+	return network, streams, stream_instantiations, _get_emitting_devices(network, streams), _get_receiving_devices(network, streams), hyperperiod

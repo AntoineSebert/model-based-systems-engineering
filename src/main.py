@@ -82,18 +82,18 @@ def main() -> int:
 
 	getLogger().setLevel(INFO if args.verbose else WARNING)
 
-	network, streams, stream_emissions, emitters, receivers = build(args.file)
+	network, streams, stream_emissions, emitters, receivers, hyperperiod = build(args.file)
 
 	if args.display_graph:
 		display_graph(network)
 
-	results = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop)
+	results = simulate(network, streams, stream_emissions, emitters, receivers, args.time, args.stop, hyperperiod)
 
 	results.monetaryCost()
 	results.redundancyCheck()
 	results.redundancySatisfiedRatio()
 
-	# to_file(results, args.file)
+	#to_file(results, args.file)
 
 	return 0
 

@@ -9,21 +9,21 @@ from queue import PriorityQueue
 from typing import Optional
 
 
-def _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current) -> Optional[tuple[int, set[Stream]]]:
-	if sched_current[0] <= simulator_age_current:
-		return sched_current
-
+def _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current, hyperperiod) -> Optional[tuple[int, set[Stream]]]:
+	if sched_current[0] <= simulator_age_current % hyperperiod:
 		try:
 			sched_current = next(scheduler_it)
 		except StopIteration:
 			scheduler_it = iter(scheduling.items())
 			sched_current = next(scheduler_it)
+
+		return sched_current
 	else:
 		return None
 
 
 def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[Stream]], emitters: set[Device],
-	receivers: set[Device], time_limit: int, stop_on_miss: bool) -> Solution:
+	receivers: set[Device], time_limit: int, stop_on_miss: bool, hyperperiod: int) -> Solution:
 	logger = logging.getLogger()
 	iteration: int = 0
 	misses: set[Stream] = set()
@@ -41,7 +41,8 @@ def simulate(network: DiGraph, streams: set[Stream], scheduling: dict[int, set[S
 	loop_cond = (lambda t, tl: t < tl) if time_limit > 0 else (lambda tl, t: True)
 
 	while loop_cond(iteration, time_limit):
-		if (time_and_streams := _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current)) is not None:
+		if (time_and_streams := _try_get_streams(scheduling, scheduler_it, sched_current, simulator_age_current, hyperperiod)) is not None:
+			sched_current = time_and_streams
 			for stream in time_and_streams[1]:
 				instance = StreamInstance(stream, time_and_streams[0] + stream.period, time_and_streams[0] + stream.period + stream.deadline)
 
